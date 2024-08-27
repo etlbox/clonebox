@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35201.131
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloneBox.Source", "CloneBox.Source\CloneBox.Source.csproj", "{735AC09D-8C4A-40FE-B1B5-D36B11AB2B0C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloneBox.Tests", "CloneBox.Tests\CloneBox.Tests.csproj", "{62A415D8-9B37-47A6-B380-6E61D1DBFAE5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3ED96B52-F63B-442B-9AD6-AD03FB7BFBF0}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{735AC09D-8C4A-40FE-B1B5-D36B11AB2B0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{735AC09D-8C4A-40FE-B1B5-D36B11AB2B0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{735AC09D-8C4A-40FE-B1B5-D36B11AB2B0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{735AC09D-8C4A-40FE-B1B5-D36B11AB2B0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62A415D8-9B37-47A6-B380-6E61D1DBFAE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62A415D8-9B37-47A6-B380-6E61D1DBFAE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62A415D8-9B37-47A6-B380-6E61D1DBFAE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62A415D8-9B37-47A6-B380-6E61D1DBFAE5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {96846D58-14BA-4DF1-996B-2C092C260ACB}
+	EndGlobalSection
+EndGlobal
