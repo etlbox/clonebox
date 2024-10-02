@@ -1,9 +1,5 @@
 ﻿using FluentAssertions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -21,7 +17,7 @@ namespace CloneBox.Tests {
         public void ClonerShouldNotCallAnyMethodOfClonableClass() {
             // just for check, ensure no hidden behaviour in MemberwiseClone            
             var orig = new CLONEABLECLASS();
-            var orig2 = new { X = new CLONEABLECLASS() };            
+            var orig2 = new { X = new CLONEABLECLASS() };
             var clone = orig.CloneX();
             var clone2 = orig2.CloneX();
             orig.Should().NotBeSameAs(clone);
@@ -71,7 +67,7 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void AnonymousObject() {
-            var orig = new { A = 1, B = "x", C= PRIVATECONST.Create() };
+            var orig = new { A = 1, B = "x", C = PRIVATECONST.Create() };
             orig.C.Value = 42;
             var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);
@@ -83,14 +79,14 @@ namespace CloneBox.Tests {
         private class CONTEXTBOUNDOBJ : ContextBoundObject {
         }
 
-        
+
         [Fact]
         public void ContextBound_Object_Should_Be_Cloned() {
             // FormatterServices.CreateUninitializedObject cannot use context-bound objects
             var orig = new CONTEXTBOUNDOBJ();
             var clone = orig.CloneX();
             clone.Should().NotBeNull();
-            orig.Should().NotBeSameAs(clone);            
+            orig.Should().NotBeSameAs(clone);
         }
 
         private class MARSHALOBJ : MarshalByRefObject {

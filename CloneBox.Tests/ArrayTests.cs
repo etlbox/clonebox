@@ -1,10 +1,8 @@
 ﻿using FluentAssertions;
-using FluentAssertions.Equivalency.Tracing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -151,8 +149,8 @@ namespace CloneBox.Tests {
             var srec1 = new STRUCT() { X = "1", Y = 1, OBJCON = new OBJCON(1, "1") };
             var srec2 = new STRUCT() { X = "2", Y = 2, OBJCON = new OBJCON(2, "2") };
             var rec1 = new STRUCTCON(new string[] { "A" }, new STRUCT[] { srec1, srec2 });
-            var rec2 = new STRUCTCON(new string[] { "B" }, new STRUCT[] { srec2 }); 
-            var origArr = new[] { rec1, rec2  };
+            var rec2 = new STRUCTCON(new string[] { "B" }, new STRUCT[] { srec2 });
+            var origArr = new[] { rec1, rec2 };
 
             var clonedArr = origArr.CloneX();
 
@@ -201,8 +199,8 @@ namespace CloneBox.Tests {
             clonedArr[0].Should().BeSameAs(clonedArr[1]);
             clonedArr[0].Should().BeSameAs(clonedArr[2]);
             clonedArr[0].Should().BeSameAs(clonedArr[3]);
-           
-          
+
+
         }
 
         public class ARROBJ {
@@ -260,7 +258,7 @@ namespace CloneBox.Tests {
             clone[2].Should().Be(3);
         }
 
-        
+
 
         public class CHARARRAY {
             public char[] CharArr { get; set; }

@@ -1,19 +1,15 @@
-﻿using CloneBox.Helper;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime;
-using System.Text;
 
-namespace CloneBox.Core {
+namespace CloneBox {
 
     internal class CloneProvider {
 
         internal CloneSettings CloneSettings { get; set; }
-        internal Dictionary<object,object> ExistingClones = new Dictionary<object, object>();
+        internal Dictionary<object, object> ExistingClones = new Dictionary<object, object>();
         InstanceCreator InstanceCreator;
 
         public CloneProvider(CloneSettings cloneSettings) {

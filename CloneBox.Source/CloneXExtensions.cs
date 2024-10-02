@@ -1,16 +1,11 @@
-﻿using CloneBox.Core;
-using System;
-using System.Linq.Expressions;
-using System.Runtime;
+﻿using System;
 
-namespace CloneBox
-{
-    public static class CloneXExtensions
-    {
-        
+namespace CloneBox {
+    public static class CloneXExtensions {
+
 
         public static T CloneX<T>(this T sourceObject)
-            => CloneXTo<T,T>(sourceObject, new CloneSettings());
+            => CloneXTo<T, T>(sourceObject, new CloneSettings());
 
         public static T CloneX<T>(this T sourceObject, CloneSettings settings)
            => CloneXTo<T, T>(sourceObject, settings);
@@ -18,7 +13,7 @@ namespace CloneBox
         public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject)
             => CloneXTo<TIn, TOut>(sourceObject, new CloneSettings());
 
-        public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, TOut destinationObject) 
+        public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, TOut destinationObject)
             => CloneXTo<TIn, TOut>(sourceObject, destinationObject, new CloneSettings());
 
         public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, TOut destinationObject, CloneSettings settings) {

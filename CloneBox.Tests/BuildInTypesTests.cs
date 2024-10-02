@@ -1,9 +1,6 @@
 using FluentAssertions;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Xunit;
 
@@ -175,7 +172,7 @@ namespace CloneBox.Tests {
             obj.CloneX().Should().NotBeSameAs(obj);
         }
 
-       
+
 
         [Fact]
         public void StringBuilderClone() {
@@ -183,9 +180,35 @@ namespace CloneBox.Tests {
             orig.Append("test1");
             var clone = orig.CloneX();
             clone.ToString().Should().Be("test1");
+
+            /* Unmerged change from project 'CloneBox.Tests (net8.0)'
+            Before:
+                    }
+
+
+                    [Fact]
+            After:
+                    }
+
+
+                    [Fact]
+            */
+
+            /* Unmerged change from project 'CloneBox.Tests (net47)'
+            Before:
+                    }
+
+
+                    [Fact]
+            After:
+                    }
+
+
+                    [Fact]
+            */
         }
 
-        
+
         [Fact]
         public void ActionClone() {
             var closure = new[] { "123" };
@@ -255,6 +278,6 @@ namespace CloneBox.Tests {
             clone.CloneX().Should().Be(DBNull.Value);
         }
 
-        
+
     }
 }

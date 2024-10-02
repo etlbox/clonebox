@@ -1,9 +1,4 @@
 ﻿using FluentAssertions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -17,7 +12,7 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void ReferenceLoop() {
-            var loop1 = new LOOP() { Id = 1 };            
+            var loop1 = new LOOP() { Id = 1 };
             var loop2 = new LOOP() { Id = 2 };
             loop1.SelfRef = loop2;
             loop2.SelfRef = loop1;

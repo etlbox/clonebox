@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -50,9 +48,9 @@ namespace CloneBox.Tests {
             clone.ElementAt(2).Should().BeSameAs(clone.ElementAt(0));
         }
 
-        public class CloneableContainer  {
+        public class CloneableContainer {
             public CloneableClass CloneableA { get; set; }
-            public CloneableClass CloneableB { get; set; }        
+            public CloneableClass CloneableB { get; set; }
         }
 
         [Fact]

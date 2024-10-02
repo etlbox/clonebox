@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CloneBox.Core {
+﻿namespace CloneBox {
     internal enum MemberType {
         Property,
         Field,

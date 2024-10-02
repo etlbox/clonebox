@@ -1,10 +1,6 @@
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -27,7 +23,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CharsInDict() { 
+        public void CharsInDict() {
             var orig = new IndexedProperty();
             orig[0] = 'T';
             orig[1] = 's';
@@ -41,13 +37,13 @@ namespace CloneBox.Tests {
         }
 
 
-        public class PropertyThrows {            
+        public class PropertyThrows {
 
-            public object Prop1 { get; set;} = new object();
+            public object Prop1 { get; set; } = new object();
 
             private object prop2;
 
-            public object Prop2 { 
+            public object Prop2 {
                 get => prop2;
                 set => throw new ArgumentNullException();
             }
@@ -65,10 +61,10 @@ namespace CloneBox.Tests {
                 IncludeNonPublicFields = false
             });
 
-            clone.Should().NotBeSameAs(orig);            
+            clone.Should().NotBeSameAs(orig);
             clone.Prop1.Should().Be("A");
             clone.Prop2.Should().BeNull();
-           
+
         }
     }
 }

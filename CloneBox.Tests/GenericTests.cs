@@ -1,9 +1,5 @@
 ﻿using FluentAssertions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -63,7 +59,7 @@ namespace CloneBox.Tests {
             orig.Should().NotBeSameAs(clone);
             clone.Value.Should().Be("12");
         }
-        
+
         [Fact]
         public void TupleWithInheritance() {
             var child = new CHILD { X = 1, Y = 2 };

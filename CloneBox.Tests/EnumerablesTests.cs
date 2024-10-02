@@ -1,10 +1,7 @@
 ﻿using FluentAssertions;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -18,7 +15,7 @@ namespace CloneBox.Tests {
             cloned.Should().NotBeSameAs(orig);
             cloned.Should().HaveCount(6);
             cloned.Should().BeEquivalentTo(orig);
-            
+
         }
 
         [Fact]
@@ -28,7 +25,7 @@ namespace CloneBox.Tests {
             cloned.Should().NotBeSameAs(orig);
             cloned.Should().HaveCount(6);
             cloned.Should().BeEquivalentTo(orig);
-            
+
         }
 
         [Fact]
@@ -41,7 +38,7 @@ namespace CloneBox.Tests {
             cloned.Should().NotBeSameAs(orig);
             cloned.Should().HaveCount(3);
             cloned.Should().BeEquivalentTo(orig);
-            
+
         }
 
         public class BasicObject {
@@ -53,7 +50,7 @@ namespace CloneBox.Tests {
             public ICollection<int> IntCollection { get; set; }
             public ICollection<BasicObject> ObjectCollection { get; set; }
 
-          
+
         }
 
         [Fact]
@@ -76,7 +73,7 @@ namespace CloneBox.Tests {
             clone.ObjectCollection.Should().HaveCount(3);
         }
 
-        public class DictionaryObject { 
+        public class DictionaryObject {
             public IDictionary<int, BasicObject> Collection { get; set; } = new Dictionary<int, BasicObject>();
         }
 
@@ -124,13 +121,13 @@ namespace CloneBox.Tests {
                 new BasicObject() { Id = 1, Name = "One" },
                 new BasicObject() { Id = 2, Name = "Two" },
                 new BasicObject() { Id = 3, Name = "Three" }
-            };              
+            };
             var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);
             clone.Should().BeEquivalentTo(orig);
         }
 
-       
+
 
         [Fact]
         public void SortedList() {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+﻿using System.Reflection;
 
 namespace CloneBox {
     public class CloneSettings {
@@ -17,11 +14,11 @@ namespace CloneBox {
             (IncludePublicProperties ? BindingFlags.Public : 0) |
             (IncludeNonPublicProperties ? BindingFlags.NonPublic : 0) |
             BindingFlags.Instance;
-        internal BindingFlags FieldBindings => 
+        internal BindingFlags FieldBindings =>
             (IncludePublicFields ? BindingFlags.Public : 0) |
             (IncludeNonPublicFields ? BindingFlags.NonPublic : 0) |
             BindingFlags.Instance;
-        internal BindingFlags ConstructorBindings => 
+        internal BindingFlags ConstructorBindings =>
             (IncludePublicConstructors ? BindingFlags.Public : 0) |
             (IncludeNonPublicConstructors ? BindingFlags.NonPublic : 0) |
             BindingFlags.Instance;

@@ -1,10 +1,6 @@
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -125,8 +121,30 @@ namespace CloneBox.Tests {
                 C = new byte[] { 1, 2, 3 }
             };
             CHILDNEW childObj = new CHILDNEW();
+
+            /* Unmerged change from project 'CloneBox.Tests (net8.0)'
+            Before:
+                        var clone = baseObj.CloneXTo(childObj);
+
+                        clone.Should().BeSameAs(childObj);
+            After:
+                        var clone = baseObj.CloneXTo(childObj);
+
+                        clone.Should().BeSameAs(childObj);
+            */
+
+            /* Unmerged change from project 'CloneBox.Tests (net47)'
+            Before:
+                        var clone = baseObj.CloneXTo(childObj);
+
+                        clone.Should().BeSameAs(childObj);
+            After:
+                        var clone = baseObj.CloneXTo(childObj);
+
+                        clone.Should().BeSameAs(childObj);
+            */
             var clone = baseObj.CloneXTo(childObj);
-            
+
             clone.Should().BeSameAs(childObj);
             clone.A.Should().Be(12);
             clone.B.Should().Be("testestest");
@@ -209,7 +227,7 @@ namespace CloneBox.Tests {
             arrTo[1].Should().BeSameAs(arrTo[2]);
             arrTo[2].Base1.Should().NotBeSameAs(baseObj);
             arrTo[2].Base1.Should().BeSameAs(arrTo[2].Base2);
-            arrTo[3].Should().BeNull();            
+            arrTo[3].Should().BeNull();
         }
 
         [Fact]
@@ -232,8 +250,8 @@ namespace CloneBox.Tests {
             arrFrom.SetValue(2, 2, 2);
             arrFrom.CloneXTo(arrTo);
             arrTo.Length.Should().Be(4);
-            arrTo.GetValue(1,1).Should().Be(1);
-            arrTo.GetValue(2,2).Should().Be(2);
+            arrTo.GetValue(1, 1).Should().Be(1);
+            arrTo.GetValue(2, 2).Should().Be(2);
         }
 
         [Fact]
@@ -253,7 +271,7 @@ namespace CloneBox.Tests {
             var dtarget = new Dictionary<string, string>();
             dsource.CloneXTo(dtarget);
             dsource["A"] = "E";
-            
+
             dtarget.Count.Should().Be(2);
             dtarget["A"].Should().Be("B");
             dtarget["C"].Should().Be("D");

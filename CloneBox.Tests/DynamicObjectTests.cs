@@ -3,10 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -191,7 +187,7 @@ namespace CloneBox.Tests {
             target.List.Count.Should().Be(2);
             target.List.ElementAt(0).Id.Should().Be(1);
             target.List.ElementAt(1).Value.Should().Be("Test2");
-            target.Array[1,1].Value.Should().Be("Test3");
+            target.Array[1, 1].Value.Should().Be("Test3");
             target.Dictionary.Should().HaveCount(2);
             target.Dictionary["1"].Should().Be(1);
             target.Dictionary["2"].Should().Be("Test2");
@@ -205,21 +201,21 @@ namespace CloneBox.Tests {
             ((target.SelfReference as dynamic).SelfReference as object).Should().BeSameAs(target.SelfReference);
         }
 
-        //[Fact]
-        //public void CopyPocoIntoDynamic() {
-        //    POCO poco = new POCO() {
-        //        Id = 1,
-        //        Value = "Test1",
-        //        NullValue = null
-        //    };
+        [Fact]
+        public void CopyPocoIntoDynamic() {
+            POCO poco = new POCO() {
+                Id = 1,
+                Value = "Test1",
+                NullValue = null
+            };
 
-        //    dynamic target = new ExpandoObject();
-        //    CloneXExtensions.CloneXTo(poco, target);
+            dynamic target = new ExpandoObject();
+            CloneXExtensions.CloneXTo(poco, target);
 
-        //    Assert.NotEqual(target, poco);
-        //    Assert.True(target.Id == 1);
-        //    Assert.True(target.Value == "Test1");
-        //    Assert.True(target.NullValue == null);
-        //}
+            Assert.NotEqual(target, poco);
+            Assert.True(target.Id == 1);
+            Assert.True(target.Value == "Test1");
+            Assert.True(target.NullValue == null);
+        }
     }
 }

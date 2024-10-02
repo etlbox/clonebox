@@ -1,9 +1,5 @@
 ﻿using FluentAssertions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -33,15 +29,37 @@ namespace CloneBox.Tests {
             public BASEOBJ B { get; set; }
         }
 
-     
+
 
         [Fact]
         public void CopyingRealInstance() {
             var newChildOrig = new NEWCHILD();
             newChildOrig.X = 2;
-            var baseObjOrig = newChildOrig as BASEOBJ;            
+            var baseObjOrig = newChildOrig as BASEOBJ;
+
+            /* Unmerged change from project 'CloneBox.Tests (net8.0)'
+            Before:
+                        baseObjOrig.X = 1;
+
+                        var newChildClone = newChildOrig.CloneX();
+            After:
+                        baseObjOrig.X = 1;
+
+                        var newChildClone = newChildOrig.CloneX();
+            */
+
+            /* Unmerged change from project 'CloneBox.Tests (net47)'
+            Before:
+                        baseObjOrig.X = 1;
+
+                        var newChildClone = newChildOrig.CloneX();
+            After:
+                        baseObjOrig.X = 1;
+
+                        var newChildClone = newChildOrig.CloneX();
+            */
             baseObjOrig.X = 1;
-            
+
             var newChildClone = newChildOrig.CloneX();
             BASEOBJ baseObjClone = baseObjOrig.CloneX();
 
@@ -61,7 +79,7 @@ namespace CloneBox.Tests {
             var childClone = childOrig.CloneX();
             childClone.Y.Should().Be(2);
             childClone.X.Should().Be(1);
-            childOrig.Should().NotBeSameAs(childClone);            
+            childOrig.Should().NotBeSameAs(childClone);
         }
 
         [Fact]
@@ -73,10 +91,10 @@ namespace CloneBox.Tests {
             childOrig.X = 3;
             var parentClone = parent.CloneX();
             var childClone = childOrig.CloneX();
-            
+
             parentClone.Should().NotBeSameAs(parent);
             childClone.Should().NotBeSameAs(childOrig);
-            parentClone.X.Should().Be(3);            
+            parentClone.X.Should().Be(3);
             childClone.Y.Should().Be(2);
             childClone.X.Should().Be(3);
         }
@@ -111,7 +129,7 @@ namespace CloneBox.Tests {
         public void DeepCopyOfArray() {
             var child1 = new CHILD { X = 1, Y = 2 };
             var child2 = new CHILD { X = 1, Y = 3 };
-            var arrayOrig = new[] { child1, child2,child1 };
+            var arrayOrig = new[] { child1, child2, child1 };
 
             var arrayClone = arrayOrig.CloneX();
             arrayClone.Length.Should().Be(3);
@@ -150,7 +168,7 @@ namespace CloneBox.Tests {
             var clone = orig.CloneX();
             s.X = null;
 
-            clone.Should().BeOfType(typeof(STRUCTINTERFACE));            
+            clone.Should().BeOfType(typeof(STRUCTINTERFACE));
             ((STRUCTINTERFACE)clone).X.Should().BeOfType(typeof(CLASSINTERFACE));
             ((CLASSINTERFACE)((STRUCTINTERFACE)clone).X).X.Should().Be(3);
             clone.Should().NotBeSameAs(orig);
@@ -182,7 +200,7 @@ namespace CloneBox.Tests {
         public void ArrayOfCastedInterfaces() {
             var c1 = new CLASSINTERFACE() { X = 1 };
             var c2 = new CLASSINTERFACE() { X = 2 };
-            var orig = new IDisposable[] { c1, c2,c1 };
+            var orig = new IDisposable[] { c1, c2, c1 };
             var clone = orig.CloneX();
             clone.Should().HaveCount(3);
             clone.Should().NotBeSameAs(orig);

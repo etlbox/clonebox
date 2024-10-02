@@ -1,13 +1,8 @@
-﻿using CloneBox.Helper;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
-namespace CloneBox.Core {
-    internal class InstanceCreator {
+namespace CloneBox {
+    public class InstanceCreator {
 
         public CloneSettings CloneSettings { get; set; } = new CloneSettings();
         public object CreateInstance(Type type, object sourceObject = null) {

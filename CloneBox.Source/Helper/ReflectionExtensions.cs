@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 
-namespace CloneBox.Helper {
+namespace CloneBox {
     internal static class ReflectionExtensions {
         //See also https://stackoverflow.com/questions/1827425/how-to-check-programmatically-if-a-type-is-a-struct-or-a-class
         public static bool IsRealPrimitive(this Type type) {
@@ -16,13 +14,13 @@ namespace CloneBox.Helper {
         }
 
         public static bool IsDynamic(this Type type, object obj)
-            => (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) && (obj == null || obj is IDictionary<string,object>));
+            => (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) && (obj == null || obj is IDictionary<string, object>));
 
         public static bool IsArray(this Type type, object obj)
           => (type.IsArray && (obj == null || obj is Array));
 
         public static bool IsIEnumerable(this Type type)
-            => typeof(IEnumerable).IsAssignableFrom(type) &&  type != typeof(string);
+            => typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string);
 
         public static MethodInfo DetermineAddMethod(this Type targetType) {
             MethodInfo addMethod = targetType.GetMethod("Add");

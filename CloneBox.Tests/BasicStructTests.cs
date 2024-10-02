@@ -1,9 +1,4 @@
 ﻿using FluentAssertions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -52,7 +47,7 @@ namespace CloneBox.Tests {
             var cloned = c1.CloneX();
             c1.F = 2;
             cloned.C.Should().NotBeNull();
-            cloned.C.Should().NotBeSameAs(c1.C);    
+            cloned.C.Should().NotBeSameAs(c1.C);
             cloned.F.Should().Be(1);
         }
 
@@ -62,9 +57,35 @@ namespace CloneBox.Tests {
             private readonly object y = new object();
 
             // Structs can't be null!            
+
+            /* Unmerged change from project 'CloneBox.Tests (net8.0)'
+            Before:
+                        private readonly StructWithObject z = new StructWithObject();
+
+
+                        public object GetY() {
+            After:
+                        private readonly StructWithObject z = new StructWithObject();
+
+
+                        public object GetY() {
+            */
+
+            /* Unmerged change from project 'CloneBox.Tests (net47)'
+            Before:
+                        private readonly StructWithObject z = new StructWithObject();
+
+
+                        public object GetY() {
+            After:
+                        private readonly StructWithObject z = new StructWithObject();
+
+
+                        public object GetY() {
+            */
             private readonly StructWithObject z = new StructWithObject();
 
-            
+
             public object GetY() {
                 return y;
             }
@@ -76,7 +97,7 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void ObjectWithReadonlyStruct() {
-            var c = new C6();            
+            var c = new C6();
             var clone = c.CloneX();
             clone.Should().NotBeSameAs(c);
             clone.X.Should().Be(1);

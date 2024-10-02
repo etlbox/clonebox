@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -190,7 +188,7 @@ namespace CloneBox.Tests {
             var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);
             clone.Equals(orig).Should().BeTrue();
-            
+
         }
 
         #endregion
@@ -604,7 +602,7 @@ namespace CloneBox.Tests {
                 };
                 var slist = new SortedList<int, ComplexClass> {
                     { 1, new ComplexClass() { Id = 8, Value = "Test8" } }
-                };                
+                };
                 res.IEnumerable = slist.Values;
                 return res;
             }
@@ -615,7 +613,7 @@ namespace CloneBox.Tests {
         public void CopyComplexObject() {
             //Arrange
             var orig = ComplexClass.CreateTestObject();
-            
+
             //Act
             var clone = orig.CloneX();
 
@@ -639,7 +637,7 @@ namespace CloneBox.Tests {
             Assert.True(clone.Array.Count() == 2);
             Assert.True(clone.Dictionary != orig.Dictionary);
             Assert.True(clone.Dictionary.Values.Count() == 2);
-            
+
         }
 
 

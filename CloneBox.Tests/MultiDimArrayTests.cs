@@ -1,10 +1,5 @@
 ﻿using FluentAssertions;
-using FluentAssertions.Equivalency.Tracing;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CloneBox.Tests {
@@ -36,10 +31,10 @@ namespace CloneBox.Tests {
             var clone = orig.CloneX();
 
             clone.Should().NotBeSameAs(orig);
-            clone[0, 0,0].Should().Be(1);
-            clone[0, 1,0].Should().Be(2);
-            clone[1, 0,0].Should().BeNull();
-            clone[1, 1,0].Should().Be(4);
+            clone[0, 0, 0].Should().Be(1);
+            clone[0, 1, 0].Should().Be(2);
+            clone[1, 0, 0].Should().BeNull();
+            clone[1, 1, 0].Should().Be(4);
         }
 
         [Fact]
@@ -85,7 +80,7 @@ namespace CloneBox.Tests {
             clone[1, 1].Should().NotBeNull();
             clone[0, 1].Should().NotBeNull();
 
-            clone[0, 0].Should().NotBeSameAs(clone[1,1]);
+            clone[0, 0].Should().NotBeSameAs(clone[1, 1]);
             clone[1, 1].Should().BeSameAs(clone[0, 1]);
 
             clone[1, 1].A.Should().BeEquivalentTo(new[] { 1, 2 });
@@ -94,7 +89,7 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void NonZeroBased() {
-            var orig = Array.CreateInstance(typeof(int), new[] { 2 }, new[] { 1 });            
+            var orig = Array.CreateInstance(typeof(int), new[] { 2 }, new[] { 1 });
             orig.SetValue(1, 1);
             orig.SetValue(2, 2);
             var clone = orig.CloneX();
@@ -104,15 +99,15 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void NonZeroBased2Dimensions() {
-            var orig = Array.CreateInstance(typeof(string), new[] { 2,3 }, new[] { 1,2 });
+            var orig = Array.CreateInstance(typeof(string), new[] { 2, 3 }, new[] { 1, 2 });
             orig.SetValue("A", 1, 2);
             orig.SetValue("B", 1, 3);
             orig.SetValue("C", 2, 2);
             orig.SetValue("D", 2, 3);
             var clone = orig.CloneX();
-            clone.GetValue(1,2).Should().Be("A");
-            clone.GetValue(1,3).Should().Be("B");
-            clone.GetValue(1,4).Should().BeNull();
+            clone.GetValue(1, 2).Should().Be("A");
+            clone.GetValue(1, 3).Should().Be("B");
+            clone.GetValue(1, 4).Should().BeNull();
             clone.GetValue(2, 2).Should().Be("C");
             clone.GetValue(2, 3).Should().Be("D");
             clone.GetValue(2, 4).Should().BeNull();
@@ -120,8 +115,8 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void NonZeroBased3Dimensions() {
-            var orig = Array.CreateInstance(typeof(string), new[] { 2, 3,2 }, new[] { 1, 2, 1 });
-            orig.SetValue("A", new [] {1,2,1});
+            var orig = Array.CreateInstance(typeof(string), new[] { 2, 3, 2 }, new[] { 1, 2, 1 });
+            orig.SetValue("A", new[] { 1, 2, 1 });
             orig.SetValue("B", new[] { 1, 3, 1 });
             var clone = orig.CloneX();
             orig.GetValue(new[] { 1, 2, 1 }).Should().Be("A");
