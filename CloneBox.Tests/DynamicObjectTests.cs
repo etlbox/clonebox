@@ -154,7 +154,7 @@ namespace CloneBox.Tests {
             public POCO[,] Array { get; set; }
             public POCO[] NullArray { get; set; }
             public Dictionary<string, object> Dictionary { get; set; }
-            public COMPLEXPOCO Reference;
+            public COMPLEXPOCO Reference { get; set; }
             public object SelfReference { get; set; }
             public object Object2 { get; set; }
 
@@ -201,21 +201,62 @@ namespace CloneBox.Tests {
             ((target.SelfReference as dynamic).SelfReference as object).Should().BeSameAs(target.SelfReference);
         }
 
-        //[Fact]
-        //public void CopyPocoIntoDynamic() {
-        //    POCO poco = new POCO() {
-        //        Id = 1,
-        //        Value = "Test1",
-        //        NullValue = null
-        //    };
+        [Fact]
+        public void CopyPocoIntoDynamic() {
+            POCO poco = new POCO() {
+                Id = 1,
+                Value = "Test1",
+                NullValue = null
+            };
 
-        //    dynamic target = new ExpandoObject();
-        //    CloneXExtensions.CloneXTo(poco, target);
+            dynamic target = new ExpandoObject();
+            CloneXExtensions.CloneXTo(poco, target);
 
-        //    Assert.NotEqual(target, poco);
-        //    Assert.True(target.Id == 1);
-        //    Assert.True(target.Value == "Test1");
-        //    Assert.True(target.NullValue == null);
-        //}
+            var dict = target as IDictionary<string,object>;            
+            Assert.True(target.Id == 1);
+            Assert.True(target.Value == "Test1");
+            Assert.True(target.NullValue == null);
+            dict.Should().HaveCount(3);
+        }
+
+        [Fact]
+        public void CopyComplexPocoIntoDynamic() {
+            var poco = new COMPLEXPOCO();
+            poco.DateTime = new DateTime(2022, 2, 2);
+            poco.List = new List<POCO>() {
+                new POCO() { Id = 1, Value = "Test1" },
+                new POCO() { Id = 2, Value = "Test2" }
+            };
+            poco.Array = new POCO[2, 2];
+            poco.Array[1, 1] = new POCO() { Id = 3, Value = "Test3" };
+            poco.Dictionary = new Dictionary<string, object>() {
+                {  "1",1 },
+                { "2", "Test2" }
+            };
+            var sr = new COMPLEXPOCO();
+            sr.Reference = sr;
+            poco.Reference = sr;
+            poco.SelfReference = poco;
+            poco.Object2 = "A";
+
+            dynamic dyn = new ExpandoObject();
+            CloneXExtensions.CloneXTo(poco, dyn);
+
+            var dict = dyn as IDictionary<string,object>;
+            (dict["DateTime"] as DateTime?).Should().Be(new DateTime(2022, 2, 2));
+            (dict["List"] as List<POCO>).Count.Should().Be(2);
+            (dict["List"] as List<POCO>).ElementAt(0).Id.Should().Be(1);
+            (dict["List"] as List<POCO>).ElementAt(1).Value.Should().Be("Test2");
+            (dict["Array"] as POCO[,])[1, 1].Value.Should().Be("Test3");
+            (dict["Dictionary"] as Dictionary<string,object>).Should().HaveCount(2);
+            (dict["Dictionary"] as Dictionary<string, object>)["1"].Should().Be(1);
+            (dict["Dictionary"] as Dictionary<string, object>)["2"].Should().Be("Test2");
+            (dict["NullArray"]).Should().BeNull();
+            (dict["Reference"] as COMPLEXPOCO).Should().NotBeSameAs(sr);
+            (dict["Reference"] as COMPLEXPOCO).Reference.Should().BeSameAs((dict["Reference"] as COMPLEXPOCO).Reference);
+            (dict["SelfReference"] as object).Should().NotBeNull();
+            (dict["SelfReference"] as COMPLEXPOCO).Should().NotBeSameAs(poco);
+            (dict["SelfReference"] as COMPLEXPOCO).SelfReference.Should().BeSameAs((dict["SelfReference"] as COMPLEXPOCO));
+        }
     }
 }

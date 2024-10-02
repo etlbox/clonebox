@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 
@@ -122,7 +123,8 @@ namespace CloneBox {
 
         private object FillDynamicDictionary(object sourceObject, object targetInst) {
             var targetDict = targetInst as IDictionary<string, object>;
-            var sourceDict = sourceObject as IDictionary<string, object>;
+            var sourceDict = sourceObject.ToDictionary();
+            
             foreach (var key in sourceDict.Keys)
                 targetDict?.Add(key, CloneInternal(sourceDict[key]));
 
