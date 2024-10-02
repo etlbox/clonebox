@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Reflection;
 
 namespace CloneBox {
@@ -27,8 +28,10 @@ namespace CloneBox {
         public Predicate<Type> DoNotCloneClass { get; set; }
         public Predicate<PropertyInfo> DoNotCloneProperty { get; set; }
         public Predicate<FieldInfo> DoNotCloneField { get; set; }
-        
-        
+
+        public ILogger Logger { get; set; }
+
+
         internal bool DoNotCloneFieldInternal(FieldInfo fieldInfo) {
             if (fieldInfo.GetCustomAttribute<DoNotClone>() != null)
                 return true;

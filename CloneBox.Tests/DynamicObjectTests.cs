@@ -212,7 +212,7 @@ namespace CloneBox.Tests {
             dynamic target = new ExpandoObject();
             CloneXExtensions.CloneXTo(poco, target);
 
-            var dict = target as IDictionary<string,object>;            
+            var dict = target as IDictionary<string, object>;
             Assert.True(target.Id == 1);
             Assert.True(target.Value == "Test1");
             Assert.True(target.NullValue == null);
@@ -242,13 +242,13 @@ namespace CloneBox.Tests {
             dynamic dyn = new ExpandoObject();
             CloneXExtensions.CloneXTo(poco, dyn);
 
-            var dict = dyn as IDictionary<string,object>;
+            var dict = dyn as IDictionary<string, object>;
             (dict["DateTime"] as DateTime?).Should().Be(new DateTime(2022, 2, 2));
             (dict["List"] as List<POCO>).Count.Should().Be(2);
             (dict["List"] as List<POCO>).ElementAt(0).Id.Should().Be(1);
             (dict["List"] as List<POCO>).ElementAt(1).Value.Should().Be("Test2");
             (dict["Array"] as POCO[,])[1, 1].Value.Should().Be("Test3");
-            (dict["Dictionary"] as Dictionary<string,object>).Should().HaveCount(2);
+            (dict["Dictionary"] as Dictionary<string, object>).Should().HaveCount(2);
             (dict["Dictionary"] as Dictionary<string, object>)["1"].Should().Be(1);
             (dict["Dictionary"] as Dictionary<string, object>)["2"].Should().Be("Test2");
             (dict["NullArray"]).Should().BeNull();

@@ -35,5 +35,13 @@ namespace CloneBox {
             }
             return addMethod;
         }
+
+        //See also: https://stackoverflow.com/questions/8817070/is-it-possible-to-access-backing-fields-behind-auto-implemented-properties
+        //Will likely work only in c#
+        internal static string GetBackingFieldName(PropFieldInfo prop) {
+            return string.Format("<{0}>k__BackingField", prop.Name);
+        }
+
+
     }
 }

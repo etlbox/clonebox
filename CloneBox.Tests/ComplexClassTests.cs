@@ -611,13 +611,10 @@ namespace CloneBox.Tests {
 
         [Fact]
         public void CopyComplexObject() {
-            //Arrange
             var orig = ComplexClass.CreateTestObject();
 
-            //Act
             var clone = orig.CloneX();
 
-            //Assert            
             Assert.False(clone.Equals(orig));
             Assert.True(clone.Id == 1);
             Assert.True(clone.Value == "Test1");

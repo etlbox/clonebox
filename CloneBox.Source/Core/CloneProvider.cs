@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 
@@ -62,14 +62,14 @@ namespace CloneBox {
 
         private void CopyPropertiesAndFields(object sourceObject, object targetObject) {
             var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), CloneSettings);
-            HashSet<string> ignoreBackingFieldNames = new HashSet<string>();
+            HashSet<string> ignoreRelatedBackingField = new HashSet<string>();
             foreach (var prop in allProperties) {
-                if (prop.DoNotClone) ignoreBackingFieldNames.Add(string.Format("<{0}>k__BackingField", prop.Name));
+                if (prop.DoNotClone) ignoreRelatedBackingField.TryAdd(ReflectionExtensions.GetBackingFieldName(prop));
                 if (prop.CanBeCloned && prop.CanRead && prop.CanWrite)
                     TryClonePropField(sourceObject, targetObject, prop);
             }
             foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), CloneSettings)) {
-                if (field.CanBeCloned && field.CanRead && field.CanWrite && !ignoreBackingFieldNames.Contains(field.Name))
+                if (field.CanBeCloned && field.CanRead && field.CanWrite && !ignoreRelatedBackingField.Contains(field.Name))
                     TryClonePropField(sourceObject, targetObject, field);
             }
         }
@@ -103,7 +103,10 @@ namespace CloneBox {
                         var element = CloneInternal(item);
                         addMethod.Invoke(targetInst, new[] { element });
                     }
-                } catch { return sourceObject; }
+                } catch {
+                    CloneSettings.Logger?.LogDebug("Could not copy data into enumerable of type '{typeName}' - is this enumerable readonly?", targetType.Name);
+                    return sourceObject;
+                }
             }
             return targetInst;
 
@@ -131,7 +134,7 @@ namespace CloneBox {
         private object FillDynamicDictionary(object sourceObject, object targetInst) {
             var targetDict = targetInst as IDictionary<string, object>;
             var sourceDict = sourceObject.ToDictionary();
-            
+
             foreach (var key in sourceDict.Keys)
                 targetDict?.Add(key, CloneInternal(sourceDict[key]));
 

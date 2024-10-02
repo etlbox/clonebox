@@ -18,7 +18,7 @@ namespace CloneBox.Tests {
             CloneXExtensions.CreateInstance<int>().Should().Be(0);
             CloneXExtensions.CreateInstance<string>().Should().Be("");
             CloneXExtensions.CreateInstance<List<string>>().Should().HaveCount(0);
-            CloneXExtensions.CreateInstance<Dictionary<string,object>>().Should().HaveCount(0);
+            CloneXExtensions.CreateInstance<Dictionary<string, object>>().Should().HaveCount(0);
             CloneXExtensions.CreateInstance<object>().Should().NotBeNull();
             CloneXExtensions.CreateInstance<OBJ>().Should().NotBeNull();
             CloneXExtensions.CreateInstance<ExpandoObject>().Should().NotBeNull();
@@ -33,6 +33,6 @@ namespace CloneBox.Tests {
             o.Id = 3;
             o.Id.Should().Be(3);
         }
-     
+
     }
 }

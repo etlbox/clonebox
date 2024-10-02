@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 
 namespace CloneBox {
@@ -27,7 +28,9 @@ namespace CloneBox {
                 if (hasDefaultConstructor)
                     return Activator.CreateInstance(type);
 
-            } catch { }
+            } catch {
+                CloneSettings.Logger?.LogDebug("No default constructor found for '{typeName}' - trying to use other constructors using default values.", type.Name);
+            }
 
             var bindingFlags = CloneSettings.ConstructorBindings;
             var constructors = type.GetConstructors(bindingFlags);
@@ -40,7 +43,8 @@ namespace CloneBox {
                     var newList = Activator.CreateInstance(type, bindingAttr: bindingFlags, binder: null, args: param.ToArray(), culture: null);
                     return newList;
                 } catch {
-                    continue;
+                    CloneSettings.Logger?.LogDebug("Constructor {rank} for type '{typeName}' failed using default values as parameter", constructors.Rank, type.Name);
+
                 }
             }
             return null;

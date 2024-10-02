@@ -42,7 +42,7 @@ namespace CloneBox {
         public static IEnumerable<PropFieldInfo> GetAllProperties(Type type, CloneSettings cloneSettings) {
             return type
                 .GetProperties(cloneSettings.PropertyBindings)
-                .Select(                
+                .Select(
                     propInfo => new PropFieldInfo(MemberType.Property) {
                         PropInfo = propInfo,
                         DoNotClone = cloneSettings.DoNotClonePropertyInternal(propInfo)

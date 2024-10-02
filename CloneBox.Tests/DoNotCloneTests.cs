@@ -33,7 +33,7 @@ namespace CloneBox.Tests {
 
             };
 
-            var clone = orig.CloneX();  
+            var clone = orig.CloneX();
 
             clone.Prop1.Should().Be("1");
             clone.Prop2.Should().BeNull();
@@ -125,7 +125,7 @@ namespace CloneBox.Tests {
             clone.Field2.Should().BeNull();
             clone.Inner1.X.Should().BeNull();
             clone.Inner2.X.Should().Be("9");
-            
+
         }
     }
 }
