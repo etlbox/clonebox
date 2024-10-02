@@ -32,7 +32,8 @@ namespace CloneBox {
         public FieldInfo FieldInfo { get; private set; }
         public bool CanRead => PropInfo?.CanRead ?? true;
         public bool CanWrite => PropInfo?.CanWrite ?? true;
-        public bool CanBeCloned { get; private set; } = true;
+        public bool DoNotClone { get; private set; }
+        public bool CanBeCloned => !DoNotClone;
 
         public PropFieldInfo(MemberType memberType) {
             MemberType = memberType;
@@ -44,7 +45,7 @@ namespace CloneBox {
                 .Select(                
                     propInfo => new PropFieldInfo(MemberType.Property) {
                         PropInfo = propInfo,
-                        CanBeCloned = propInfo.GetCustomAttribute<DoNotClone>() == null
+                        DoNotClone = cloneSettings.DoNotClonePropertyInternal(propInfo)
                     }
                 );
         }
@@ -55,7 +56,7 @@ namespace CloneBox {
                 .Select(
                     fieldInfo => new PropFieldInfo(MemberType.Field) {
                         FieldInfo = fieldInfo,
-                        CanBeCloned = fieldInfo.GetCustomAttribute<DoNotClone>() == null
+                        DoNotClone = cloneSettings.DoNotCloneFieldInternal(fieldInfo)
                     }
                 );
         }

@@ -42,6 +42,7 @@ namespace CloneBox {
         internal object CloneToInternal(object sourceObject, object targetObject) {
             if (targetObject == null) return null;
             var targetType = targetObject.GetType();
+            if (CloneSettings.DoNotCloneClassInternal(targetType)) return null;
             if (targetType.IsRealPrimitive()) {
                 targetObject = sourceObject;
             } else if (typeof(IDictionary).IsAssignableFrom(targetType)) {
@@ -61,14 +62,14 @@ namespace CloneBox {
 
         private void CopyPropertiesAndFields(object sourceObject, object targetObject) {
             var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), CloneSettings);
-            HashSet<string> backingFieldNames = new HashSet<string>();
+            HashSet<string> ignoreBackingFieldNames = new HashSet<string>();
             foreach (var prop in allProperties) {
-                if (!prop.CanBeCloned) backingFieldNames.Add(string.Format("<{0}>k__BackingField", prop.Name));
+                if (prop.DoNotClone) ignoreBackingFieldNames.Add(string.Format("<{0}>k__BackingField", prop.Name));
                 if (prop.CanBeCloned && prop.CanRead && prop.CanWrite)
                     TryClonePropField(sourceObject, targetObject, prop);
             }
             foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), CloneSettings)) {
-                if (field.CanBeCloned && field.CanRead && field.CanWrite && !backingFieldNames.Contains(field.Name))
+                if (field.CanBeCloned && field.CanRead && field.CanWrite && !ignoreBackingFieldNames.Contains(field.Name))
                     TryClonePropField(sourceObject, targetObject, field);
             }
         }

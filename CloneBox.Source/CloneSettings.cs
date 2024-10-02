@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace CloneBox {
     public sealed class CloneSettings {
@@ -22,5 +23,28 @@ namespace CloneBox {
             (IncludePublicConstructors ? BindingFlags.Public : 0) |
             (IncludeNonPublicConstructors ? BindingFlags.NonPublic : 0) |
             BindingFlags.Instance;
+
+        public Predicate<Type> DoNotCloneClass { get; set; }
+        public Predicate<PropertyInfo> DoNotCloneProperty { get; set; }
+        public Predicate<FieldInfo> DoNotCloneField { get; set; }
+        
+        
+        internal bool DoNotCloneFieldInternal(FieldInfo fieldInfo) {
+            if (fieldInfo.GetCustomAttribute<DoNotClone>() != null)
+                return true;
+            return DoNotCloneField?.Invoke(fieldInfo) ?? false;
+        }
+
+        internal bool DoNotCloneClassInternal(Type type) {
+            if (type.GetCustomAttribute<DoNotClone>() != null)
+                return true;
+            return DoNotCloneClass?.Invoke(type) ?? false;
+        }
+
+        internal bool DoNotClonePropertyInternal(PropertyInfo propInfo) {
+            if (propInfo.GetCustomAttribute<DoNotClone>() != null)
+                return true;
+            return DoNotCloneProperty?.Invoke(propInfo) ?? false;
+        }
     }
 }
