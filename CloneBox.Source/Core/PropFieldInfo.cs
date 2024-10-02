@@ -27,11 +27,12 @@ namespace CloneBox {
             }
         }
 
-        public MemberType MemberType { get; set; }
-        public PropertyInfo PropInfo { get; set; }
-        public FieldInfo FieldInfo { get; set; }
+        public MemberType MemberType { get; private set; }
+        public PropertyInfo PropInfo { get; private set; }
+        public FieldInfo FieldInfo { get; private set; }
         public bool CanRead => PropInfo?.CanRead ?? true;
         public bool CanWrite => PropInfo?.CanWrite ?? true;
+        public bool CanBeCloned { get; private set; } = true;
 
         public PropFieldInfo(MemberType memberType) {
             MemberType = memberType;
@@ -40,9 +41,10 @@ namespace CloneBox {
         public static IEnumerable<PropFieldInfo> GetAllProperties(Type type, CloneSettings cloneSettings) {
             return type
                 .GetProperties(cloneSettings.PropertyBindings)
-                .Select(
+                .Select(                
                     propInfo => new PropFieldInfo(MemberType.Property) {
-                        PropInfo = propInfo
+                        PropInfo = propInfo,
+                        CanBeCloned = propInfo.GetCustomAttribute<DoNotClone>() == null
                     }
                 );
         }
@@ -52,7 +54,8 @@ namespace CloneBox {
                 .GetFields(cloneSettings.FieldBindings)
                 .Select(
                     fieldInfo => new PropFieldInfo(MemberType.Field) {
-                        FieldInfo = fieldInfo
+                        FieldInfo = fieldInfo,
+                        CanBeCloned = fieldInfo.GetCustomAttribute<DoNotClone>() == null
                     }
                 );
         }

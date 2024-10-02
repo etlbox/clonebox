@@ -91,10 +91,28 @@ namespace CloneBox.Tests {
                 ;
             }
 
-            public bool CheckValuesPublicBinding() {
+            public bool CheckValuesPublicPropsAndFieldsBinding() {
                 return SetProp1 == 1 &&
                     SetProp2 == 3 &&
                     ObjField1.X == 1 &&
+                    ObjField2 == null &&
+                    ObjProp1.X == 1 &&
+                    ObjProp2 == null &&
+                    ObjProp3 == null &&
+                    ObjProp4 == null &&
+                    Prop1 == 1 &&
+                    Prop2 == 0 &&
+                    Prop3 == null &&
+                    Prop4 == null &&
+                    ReadOnly1 == null &&
+                    ReadOnly2.X == 2;
+                ;
+            }
+
+            public bool CheckValuesPublicPropsOnlyBinding() {
+                return SetProp1 == 1 &&
+                    SetProp2 == 3 &&
+                    ObjField1 == null &&
                     ObjField2 == null &&
                     ObjProp1.X == 1 &&
                     ObjProp2 == null &&
@@ -131,7 +149,20 @@ namespace CloneBox.Tests {
                 IncludeNonPublicProperties = false,
             });
             clone.Should().NotBeSameAs(orig);
-            clone.CheckValuesPublicBinding().Should().BeTrue();
+            clone.CheckValuesPublicPropsAndFieldsBinding().Should().BeTrue();
+        }
+
+        [Fact]
+        public void OnlyPublicProperties() {
+            var orig = new ModifierTest();
+            orig.SetValues();
+            var clone = orig.CloneX(new CloneSettings() {
+                IncludeNonPublicFields = false,
+                IncludeNonPublicProperties = false,
+                IncludePublicFields = false
+            });
+            clone.Should().NotBeSameAs(orig);
+            clone.CheckValuesPublicPropsOnlyBinding().Should().BeTrue();
         }
 
 

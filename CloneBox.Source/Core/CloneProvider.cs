@@ -28,7 +28,7 @@ namespace CloneBox {
             if (sourceObject == null) return null;
             if (sourceObject.GetType().IsRealPrimitive()) return sourceObject;
             if (ExistingClones.ContainsKey(sourceObject)) return ExistingClones[sourceObject];
-            if (CloneSettings.PreferICloneable && sourceObject is ICloneable && !(sourceObject is Delegate) && !(sourceObject is Array)) {
+            if (CloneSettings.UseICloneableClone && sourceObject is ICloneable && !(sourceObject is Delegate) && !(sourceObject is Array)) {
                 var iclone = ((ICloneable)sourceObject).Clone();
                 ExistingClones.Add(sourceObject, iclone);
                 return iclone;
@@ -53,19 +53,25 @@ namespace CloneBox {
             } else if (targetType.IsIEnumerable()) {
                 return FillList(sourceObject, targetObject, targetType);
             } else {
-                foreach (var prop in PropFieldInfo.GetAllProperties(targetObject.GetType(), CloneSettings)) {
-                    if (prop.CanRead && prop.CanWrite)
-                        TryClonePropField(sourceObject, targetObject, prop);
-                }
-                foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), CloneSettings)) {
-                    if (field.CanRead && field.CanWrite)
-                        TryClonePropField(sourceObject, targetObject, field);
-                }
+                CopyPropertiesAndFields(sourceObject, targetObject);
             }
 
             return targetObject;
         }
 
+        private void CopyPropertiesAndFields(object sourceObject, object targetObject) {
+            var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), CloneSettings);
+            HashSet<string> backingFieldNames = new HashSet<string>();
+            foreach (var prop in allProperties) {
+                if (!prop.CanBeCloned) backingFieldNames.Add(string.Format("<{0}>k__BackingField", prop.Name));
+                if (prop.CanBeCloned && prop.CanRead && prop.CanWrite)
+                    TryClonePropField(sourceObject, targetObject, prop);
+            }
+            foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), CloneSettings)) {
+                if (field.CanBeCloned && field.CanRead && field.CanWrite && !backingFieldNames.Contains(field.Name))
+                    TryClonePropField(sourceObject, targetObject, field);
+            }
+        }
 
 
         private void TryClonePropField(object sourceObject, object targetObject, PropFieldInfo targetPropField) {

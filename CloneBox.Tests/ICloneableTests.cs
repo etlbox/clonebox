@@ -21,7 +21,7 @@ namespace CloneBox.Tests {
             var orig = new CloneableClass();
 
             var clone = orig.CloneX(new CloneSettings() {
-                PreferICloneable = true
+                UseICloneableClone = true
             });
             clone.Should().NotBeSameAs(orig);
             clone.Id.Should().Be(2);
@@ -38,7 +38,7 @@ namespace CloneBox.Tests {
             };
 
             var clone = orig.CloneX(new CloneSettings() {
-                PreferICloneable = true
+                UseICloneableClone = true
             });
             clone.Should().NotBeSameAs(orig);
             clone.Should().HaveCount(3);
@@ -61,7 +61,7 @@ namespace CloneBox.Tests {
                 CloneableB = orig
             };
             var containerClone = container.CloneX(new CloneSettings() {
-                PreferICloneable = true
+                UseICloneableClone = true
             });
             containerClone.CloneableA.Should().NotBeSameAs(orig);
             containerClone.CloneableA.Should().BeSameAs(containerClone.CloneableB);

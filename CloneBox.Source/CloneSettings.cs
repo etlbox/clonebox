@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 
 namespace CloneBox {
-    public class CloneSettings {
+    public sealed class CloneSettings {
         public bool IncludePublicProperties { get; set; } = true;
         public bool IncludePublicFields { get; set; } = true;
         public bool IncludeNonPublicProperties { get; set; } = true;
@@ -9,7 +9,7 @@ namespace CloneBox {
         public bool IncludePublicConstructors { get; set; } = true;
         public bool IncludeNonPublicConstructors { get; set; } = true;
 
-        public bool PreferICloneable { get; set; } = false;
+        public bool UseICloneableClone { get; set; } = false;
         internal BindingFlags PropertyBindings =>
             (IncludePublicProperties ? BindingFlags.Public : 0) |
             (IncludeNonPublicProperties ? BindingFlags.NonPublic : 0) |

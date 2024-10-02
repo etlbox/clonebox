@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace CloneBox {
-    public class InstanceCreator {
+    internal class InstanceCreator {
 
         public CloneSettings CloneSettings { get; set; } = new CloneSettings();
         public object CreateInstance(Type type, object sourceObject = null) {
