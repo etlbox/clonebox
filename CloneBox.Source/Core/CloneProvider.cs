@@ -72,11 +72,11 @@ namespace CloneBox.Core {
 
 
         private void TryClonePropField(object sourceObject, object targetObject, PropFieldInfo targetPropField) {
-            PropFieldInfo sourcePropField = PropFieldInfo.MatchingPropField(targetPropField.MemberType, sourceObject.GetType(), targetPropField.Name, CloneSettings);
+            PropFieldInfo sourcePropField = PropFieldInfo.MatchingPropField(targetPropField.MemberType, sourceObject, targetPropField.Name, CloneSettings);
             if (sourcePropField?.Type == null) return;
 
             var paramInfo = sourcePropField.TryGetIndexedParameters();
-            if ((paramInfo?.Length ?? 0) > 0) {
+            if (sourcePropField.MemberType == MemberType.Property && (paramInfo?.Length ?? 0) > 0) {
                 for (int i = 0; i < paramInfo.Length; i++) {
                     var index = new object[] { i };
                     object propFieldClone = CloneInternal(sourcePropField.PropInfo.GetValue(sourceObject, index));

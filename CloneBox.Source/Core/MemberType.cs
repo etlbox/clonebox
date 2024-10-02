@@ -5,6 +5,7 @@ using System.Text;
 namespace CloneBox.Core {
     internal enum MemberType {
         Property,
-        Field
+        Field,
+        Dynamic
     }
 }

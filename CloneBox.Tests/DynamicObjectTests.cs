@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -27,6 +28,7 @@ namespace CloneBox.Tests {
             Assert.True(copy.Value == "Test1");
             Assert.True(copy.NullValue == null);
         }
+
 
         public class ComplexClass {
             public int Id { get; set; }
@@ -66,7 +68,7 @@ namespace CloneBox.Tests {
                     },
                     Object = new ComplexClass() { Id = 8, Value = "Test8" },
                     Object2 = new ComplexClass() { Id = 9, Value = "Test9" }
-                };                
+                };
                 return res;
             }
         }
@@ -128,5 +130,96 @@ namespace CloneBox.Tests {
             Assert.NotEqual(level3.Complex, (dyn as dynamic).Level1.Level2.Level3.Complex);
         }
 
+
+        public class POCO {
+            public int Id { get; set; }
+            public string Value { get; set; }
+            public int? NullValue { get; set; }
+        }
+
+        [Fact]
+        public void CopyBasicDynamicIntoPoco() {
+            dynamic dyn = new ExpandoObject();
+            dyn.Id = 1;
+            dyn.Value = "Test1";
+            dyn.NullValue = null;
+
+            POCO target = new POCO();
+            CloneXExtensions.CloneXTo(dyn, target);
+
+            Assert.True(target.Id == 1);
+            Assert.True(target.Value == "Test1");
+            Assert.True(target.NullValue == null);
+        }
+
+        public class COMPLEXPOCO {
+            public DateTime? DateTime { get; set; }
+            public List<POCO> List { get; set; }
+            public POCO[,] Array { get; set; }
+            public POCO[] NullArray { get; set; }
+            public Dictionary<string, object> Dictionary { get; set; }
+            public COMPLEXPOCO Reference;
+            public object SelfReference { get; set; }
+            public object Object2 { get; set; }
+
+        }
+
+        [Fact]
+        public void CopyDynamicIntoComplexPoco() {
+            dynamic dyn = new ExpandoObject();
+            dyn.DateTime = new DateTime(2022, 2, 2);
+            dyn.List = new List<POCO>() {
+                new POCO() { Id = 1, Value = "Test1" },
+                new POCO() { Id = 2, Value = "Test2" }
+            };
+            dyn.Array = new POCO[2, 2];
+            dyn.Array[1, 1] = new POCO() { Id = 3, Value = "Test3" };
+            dyn.Dictionary = new Dictionary<string, object>() {
+                {  "1",1 },
+                { "2", "Test2" }
+            };
+            var sr = new COMPLEXPOCO();
+            sr.Reference = sr;
+            dyn.Reference = sr;
+            dyn.SelfReference = dyn;
+            dyn.Object2 = "A";
+
+            COMPLEXPOCO target = new COMPLEXPOCO();
+            CloneXExtensions.CloneXTo(dyn, target);
+
+            target.DateTime.Should().Be(new DateTime(2022, 2, 2));
+            target.List.Count.Should().Be(2);
+            target.List.ElementAt(0).Id.Should().Be(1);
+            target.List.ElementAt(1).Value.Should().Be("Test2");
+            target.Array[1,1].Value.Should().Be("Test3");
+            target.Dictionary.Should().HaveCount(2);
+            target.Dictionary["1"].Should().Be(1);
+            target.Dictionary["2"].Should().Be("Test2");
+            target.NullArray.Should().BeNull();
+
+            target.Reference.Should().NotBeSameAs(sr);
+            target.Reference.Reference.Should().BeSameAs(target.Reference);
+
+            target.SelfReference.Should().NotBeNull();
+            ((target.SelfReference as dynamic).SelfReference as object).Should().NotBeSameAs(dyn);
+            ((target.SelfReference as dynamic).SelfReference as object).Should().BeSameAs(target.SelfReference);
+        }
+
+        //[Fact]
+        //public void CopyPocoIntoDynamic() {
+        //    POCO poco = new POCO() {
+        //        Id = 1,
+        //        Value = "Test1",
+        //        NullValue = null
+        //    };
+
+        //    dynamic target = new ExpandoObject();
+        //    CloneXExtensions.CloneXTo(poco, target);
+
+        //    Assert.NotEqual(target, poco);
+        //    Assert.True(target.Id == 1);
+        //    Assert.True(target.Value == "Test1");
+        //    Assert.True(target.NullValue == null);
+        //}
     }
 }

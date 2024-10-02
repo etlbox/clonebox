@@ -1,6 +1,8 @@
-﻿using System;
+﻿using CloneBox.Helper;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,8 +12,26 @@ namespace CloneBox.Core {
 
     internal class PropFieldInfo {
 
-        public string Name => PropInfo?.Name ?? FieldInfo?.Name;
-        public Type Type => PropInfo?.PropertyType ?? FieldInfo?.FieldType;
+        private string _name;
+        public string Name {
+            get {
+                return _name ?? PropInfo?.Name ?? FieldInfo?.Name;
+            }
+            set {
+                _name = value;
+            }
+        }
+
+        private Type _type;
+        public Type Type {
+            get {
+                return _type ?? PropInfo?.PropertyType ?? FieldInfo?.FieldType;
+            }
+            set {
+                _type = value;
+            }
+        }
+
         public MemberType MemberType { get; set; }
         public PropertyInfo PropInfo { get; set; }
         public FieldInfo FieldInfo { get; set; }
@@ -42,7 +62,15 @@ namespace CloneBox.Core {
                 );
         }
 
-        public static PropFieldInfo MatchingPropField(MemberType memberType, Type sourceType, string propFieldName, CloneSettings cloneSettings) {
+        public static PropFieldInfo MatchingPropField(MemberType memberType, object sourceObject, string propFieldName, CloneSettings cloneSettings) {
+            if (sourceObject is IDictionary<string, object>) {
+                var dict = sourceObject as IDictionary<string, object>;
+                return new PropFieldInfo(MemberType.Dynamic) {
+                    Type = dict.GetValueOrNull(propFieldName)?.GetType(),
+                    Name = propFieldName
+                };
+            }
+            var sourceType = sourceObject.GetType();
             if (memberType == MemberType.Property) {
                 var prop = sourceType.GetProperty(propFieldName, cloneSettings.PropertyBindings);
                 return new PropFieldInfo(MemberType.Property) {
@@ -57,19 +85,19 @@ namespace CloneBox.Core {
         }
 
         public object GetValue(object obj) {
-            if (MemberType == MemberType.Property)
+            if (MemberType == MemberType.Dynamic)
+                return (obj as IDictionary<string, object>).GetValueOrNull(Name);
+            else if (MemberType == MemberType.Property)
                 try {
                     return PropInfo.GetValue(obj);
+                } catch {
+                    return PropInfo.GetValue(obj, new object[] { null });
                 }
-                catch {
-                    return PropInfo.GetValue(obj, new object[] {null });
-                }
-
             else
                 return FieldInfo.GetValue(obj);
         }
 
-        
+
 
         public void SetValue(object obj, object value) {
             try {
@@ -77,7 +105,7 @@ namespace CloneBox.Core {
                     PropInfo.SetValue(obj, value);
                 else
                     FieldInfo.SetValue(obj, value);
-            } catch(Exception e) {
+            } catch (Exception e) {
             }
         }
 
