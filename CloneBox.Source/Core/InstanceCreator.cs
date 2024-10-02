@@ -13,7 +13,7 @@ namespace CloneBox.Core {
         public object CreateInstance(Type type, object sourceObject = null) {
             object newInstance = null;
             if (type == null) return null;
-            if (type.IsArray || (sourceObject != null && sourceObject is Array)) {
+            if (type.IsArray(sourceObject)) {
                 newInstance = CreateArrayInstance(type, sourceObject);
             } else if (sourceObject != null && sourceObject is Delegate) {
                 return (sourceObject as Delegate).Clone();

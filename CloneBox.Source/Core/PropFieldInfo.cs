@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -63,14 +64,14 @@ namespace CloneBox.Core {
         }
 
         public static PropFieldInfo MatchingPropField(MemberType memberType, object sourceObject, string propFieldName, CloneSettings cloneSettings) {
-            if (sourceObject is IDictionary<string, object>) {
+            var sourceType = sourceObject.GetType();
+            if (sourceType.IsDynamic(sourceObject)) {
                 var dict = sourceObject as IDictionary<string, object>;
                 return new PropFieldInfo(MemberType.Dynamic) {
                     Type = dict.GetValueOrNull(propFieldName)?.GetType(),
                     Name = propFieldName
                 };
-            }
-            var sourceType = sourceObject.GetType();
+            }            
             if (memberType == MemberType.Property) {
                 var prop = sourceType.GetProperty(propFieldName, cloneSettings.PropertyBindings);
                 return new PropFieldInfo(MemberType.Property) {

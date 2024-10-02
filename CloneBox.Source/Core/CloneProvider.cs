@@ -51,9 +51,9 @@ namespace CloneBox.Core {
                 return FillDictionary(sourceObject, targetObject);
             } else if (typeof(IDictionary<string, object>).IsAssignableFrom(targetType)) {
                 return FillDynamicDictionary(sourceObject, targetObject);
-            } else if (targetType.IsArray || targetObject is Array) {
+            } else if (targetType.IsArray(targetObject)) {
                 return FillArray(sourceObject, targetObject);
-            } else if (typeof(IEnumerable).IsAssignableFrom(targetType) && targetType != typeof(string)) {
+            } else if (targetType.IsIEnumerable()) {
                 return FillList(sourceObject, targetObject, targetType);
             } else {
                 foreach (var prop in PropFieldInfo.GetAllProperties(targetObject.GetType(), CloneSettings)) {
