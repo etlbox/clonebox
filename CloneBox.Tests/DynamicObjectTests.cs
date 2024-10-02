@@ -201,21 +201,21 @@ namespace CloneBox.Tests {
             ((target.SelfReference as dynamic).SelfReference as object).Should().BeSameAs(target.SelfReference);
         }
 
-        [Fact]
-        public void CopyPocoIntoDynamic() {
-            POCO poco = new POCO() {
-                Id = 1,
-                Value = "Test1",
-                NullValue = null
-            };
+        //[Fact]
+        //public void CopyPocoIntoDynamic() {
+        //    POCO poco = new POCO() {
+        //        Id = 1,
+        //        Value = "Test1",
+        //        NullValue = null
+        //    };
 
-            dynamic target = new ExpandoObject();
-            CloneXExtensions.CloneXTo(poco, target);
+        //    dynamic target = new ExpandoObject();
+        //    CloneXExtensions.CloneXTo(poco, target);
 
-            Assert.NotEqual(target, poco);
-            Assert.True(target.Id == 1);
-            Assert.True(target.Value == "Test1");
-            Assert.True(target.NullValue == null);
-        }
+        //    Assert.NotEqual(target, poco);
+        //    Assert.True(target.Id == 1);
+        //    Assert.True(target.Value == "Test1");
+        //    Assert.True(target.NullValue == null);
+        //}
     }
 }

@@ -32,5 +32,15 @@ namespace CloneBox {
                 throw new InvalidOperationException("Cannot clone a null object.");
         }
 
+        public static T CreateInstance<T>() {
+            var instanceCreator = new InstanceCreator();
+            return (T)instanceCreator.CreateInstance(typeof(T));
+        }
+
+        public static T CreateInstance<T>(T templateObject) {
+            var instanceCreator = new InstanceCreator();
+            return (T)instanceCreator.CreateInstance(typeof(T), templateObject);
+        }
+
     }
 }
