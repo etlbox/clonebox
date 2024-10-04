@@ -122,27 +122,6 @@ namespace CloneBox.Tests {
             };
             CHILDNEW childObj = new CHILDNEW();
 
-            /* Unmerged change from project 'CloneBox.Tests (net8.0)'
-            Before:
-                        var clone = baseObj.CloneXTo(childObj);
-
-                        clone.Should().BeSameAs(childObj);
-            After:
-                        var clone = baseObj.CloneXTo(childObj);
-
-                        clone.Should().BeSameAs(childObj);
-            */
-
-            /* Unmerged change from project 'CloneBox.Tests (net47)'
-            Before:
-                        var clone = baseObj.CloneXTo(childObj);
-
-                        clone.Should().BeSameAs(childObj);
-            After:
-                        var clone = baseObj.CloneXTo(childObj);
-
-                        clone.Should().BeSameAs(childObj);
-            */
             var clone = baseObj.CloneXTo(childObj);
 
             clone.Should().BeSameAs(childObj);

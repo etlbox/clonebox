@@ -1,12 +1,21 @@
-﻿using Force.DeepCloner;
+﻿using BenchmarkDotNet.Running;
+using Force.DeepCloner;
 using System.Diagnostics;
 
 namespace CloneBox.Benchmark {
     internal class Program {
 
-        private const int TestObjects = 200;
+
 
         static void Main(string[] args) {
+
+            var summary = BenchmarkRunner.Run<SimpleDataClone>();
+        }
+
+        static void FirstExampleBenchmark() {
+
+            int TestObjects = 200;
+
             var results = new Dictionary<string, TimeSpan>();
             Console.WriteLine("CloneBox Benchmark");
             var timer = new Stopwatch();
@@ -18,7 +27,7 @@ namespace CloneBox.Benchmark {
             var clonedListCloneBox = new BenchmarkObject[TestObjects];
             var clonedListDeepClone = new BenchmarkObject[TestObjects];
 
-            for (int i=0;i<TestObjects;i++) {
+            for (int i = 0; i < TestObjects; i++) {
                 origList[i] = BenchmarkObject.CreateTestObject(i);
             }
             timer.Stop();
@@ -36,7 +45,7 @@ namespace CloneBox.Benchmark {
             timer.Stop();
             results.Add("CloneBox", timer.Elapsed);
             Console.WriteLine($"CloneBox took {timer.Elapsed}");
-            
+
 
             Console.WriteLine($"Measuring DeepCloner.DeepClone() X {TestObjects:N0}...");
             timer.Restart();
@@ -55,7 +64,6 @@ namespace CloneBox.Benchmark {
                 Console.WriteLine($"#{resultNumber}: {result.Key} took {result.Value}, {(result.Value.TotalMilliseconds / TestObjects):N2}ms per clone operation");
                 resultNumber++;
             }
-
         }
     }
 }

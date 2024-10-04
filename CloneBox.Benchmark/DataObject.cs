@@ -16,8 +16,8 @@ namespace CloneBox.Benchmark {
         public static DataObject CreateDataObject(BenchmarkObject parent, int id) {
             return new DataObject() {
                 Id = id,
-                Data = Encoding.GetEncoding("ISO-8859-1").GetBytes(BenchmarkObject.RandomString(1000)),
-                Name = BenchmarkObject.RandomString(1000),
+                Data = Encoding.GetEncoding("ISO-8859-1").GetBytes(StringHelper.RandomString(1000)),
+                Name = StringHelper.RandomString(1000),
                 Parent = parent
             };
         }
