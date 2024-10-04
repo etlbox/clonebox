@@ -9,7 +9,21 @@ namespace CloneBox.Benchmark {
 
         static void Main(string[] args) {
 
-            var summary = BenchmarkRunner.Run<SimpleDataClone>();
+            //var summary = BenchmarkRunner.Run<SimpleDataClone>();
+            var test1 = new SimpleDataClone();
+            test1.N = 500000;
+            test1.Setup();
+            PrintExecutionTime(test1.SimpleWithCloneX, "Clone with CloneX");
+            PrintExecutionTime(test1.SimpleWithDeepClone, "Clone With DeepClone");
+        }
+
+        static void PrintExecutionTime(Action a, string message) {
+            Console.WriteLine(message);
+            var timer = new Stopwatch();
+            timer.Start();
+            a.Invoke();
+            timer.Stop();
+            Console.WriteLine($"Done - took {timer.Elapsed}");
         }
 
         static void FirstExampleBenchmark() {
