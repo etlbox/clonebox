@@ -32,7 +32,7 @@ namespace CloneBox.Core {
             while (tp != null);
 
             foreach (var fieldInfo in fi) {
-                var methodInfo = fieldInfo.FieldType.IsRealPrimitive()
+                var methodInfo = fieldInfo.FieldType.IsValueType
                          ? typeof(CloneProvider).GetMethod("CloneStructInternal", BindingFlags.NonPublic | BindingFlags.Static)
                              .MakeGenericMethod(fieldInfo.FieldType)
                          : typeof(CloneProvider).GetMethod("CloneInternal", BindingFlags.NonPublic | BindingFlags.Static);
