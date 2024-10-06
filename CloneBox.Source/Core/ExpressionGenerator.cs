@@ -33,9 +33,9 @@ namespace CloneBox.Core {
 
             foreach (var fieldInfo in fi) {
                 var methodInfo = fieldInfo.FieldType.IsRealPrimitive()
-                         ? typeof(ExpressionGenerator).GetMethod("CloneStructInternal", BindingFlags.NonPublic | BindingFlags.Static)
+                         ? typeof(CloneProvider).GetMethod("CloneStructInternal", BindingFlags.NonPublic | BindingFlags.Static)
                              .MakeGenericMethod(fieldInfo.FieldType)
-                         : typeof(ExpressionGenerator).GetMethod("CloneClassInternal", BindingFlags.NonPublic | BindingFlags.Static);
+                         : typeof(CloneProvider).GetMethod("CloneInternal", BindingFlags.NonPublic | BindingFlags.Static);
 
                 var get = Expression.Field(fromLocal, fieldInfo);
                 var call = (Expression)Expression.Call(methodInfo, get, state);

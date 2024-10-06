@@ -11,7 +11,7 @@ namespace CloneBox.Benchmark {
 
             //var summary = BenchmarkRunner.Run<SimpleDataClone>();
             var test1 = new SimpleDataClone();
-            test1.N = 500000;
+            test1.N = 50;
             test1.Setup();
             PrintExecutionTime(test1.SimpleWithCloneX, "Clone with CloneX");
             PrintExecutionTime(test1.SimpleWithDeepClone, "Clone With DeepClone");

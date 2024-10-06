@@ -14,6 +14,19 @@ namespace CloneBox {
             return CloneToInternal(sourceObject, targetInst, state);
         }
 
+        private static T CloneStructInternal<T>(T obj, CloneState cloneSettings) // where T : struct
+     {
+            return obj;
+            // no loops, no nulls, no inheritance
+            //var cloner = GetClonerForValueType<T>();
+
+            // safe ojbect
+            //if (cloner == null)
+            //    return obj;
+
+            //return cloner(obj, state);
+        }
+
         internal static object CloneToInternal(object sourceObject, object targetObject, CloneState state) {
             state.ExistingCloners.TryGetValue(sourceObject.GetType(), out var cloner);
             if (cloner == null) {

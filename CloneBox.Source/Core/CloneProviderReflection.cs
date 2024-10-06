@@ -23,6 +23,8 @@ namespace CloneBox {
             }
         }
 
+     
+
         internal static object CloneToInternal(object sourceObject, object targetObject, CloneState state) {
             if (targetObject == null) return null;
             var targetType = targetObject.GetType();
@@ -84,7 +86,7 @@ namespace CloneBox {
                 try {
                     MethodInfo addMethod = targetType.DetermineAddMethod();
                     foreach (var item in enumerable) {
-                        var element = CloneInternal(item,state);
+                        var element = CloneInternal(item, state);
                         addMethod.Invoke(targetInst, new[] { element });
                     }
                 } catch {
