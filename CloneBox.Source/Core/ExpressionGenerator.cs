@@ -16,11 +16,11 @@ namespace CloneBox.Core {
             var to = Expression.Parameter(methodType);
             var fromLocal = Expression.Variable(type);
             var toLocal = Expression.Variable(type);
-            var state = Expression.Parameter(typeof(CloneSettings));
+            var state = Expression.Parameter(typeof(CloneState));
 
             expressionList.Add(Expression.Assign(fromLocal, Expression.Convert(from, type)));
             expressionList.Add(Expression.Assign(toLocal, Expression.Convert(to, type)));
-            expressionList.Add(Expression.Call(state, typeof(CloneSettings).GetMethod("AddExistingClone"), from, to));
+            expressionList.Add(Expression.Call(state, typeof(CloneState).GetMethod("AddExistingClone"), from, to));
 
             List<FieldInfo> fi = new List<FieldInfo>();
             var tp = type;
@@ -45,7 +45,7 @@ namespace CloneBox.Core {
 
             expressionList.Add(Expression.Convert(toLocal, methodType));
 
-            var funcType = typeof(Func<,,,>).MakeGenericType(methodType, methodType, typeof(CloneSettings), methodType);
+            var funcType = typeof(Func<,,,>).MakeGenericType(methodType, methodType, typeof(CloneState), methodType);
 
             var blockParams = new List<ParameterExpression>();
             blockParams.Add(fromLocal);
@@ -55,7 +55,7 @@ namespace CloneBox.Core {
             //var state = Expression.Parameter(typeof(DeepCloneState));
         }
 
-        private static T CloneStructInternal<T>(T obj, CloneSettings cloneSettings) // where T : struct
+        private static T CloneStructInternal<T>(T obj, CloneState cloneSettings) // where T : struct
         {
             return obj;
             // no loops, no nulls, no inheritance
@@ -68,7 +68,7 @@ namespace CloneBox.Core {
             //return cloner(obj, state);
         }
 
-        private static object CloneClassInternal(object obj, CloneSettings cloneSettings) {
+        private static object CloneClassInternal(object obj, CloneState cloneSettings) {
             if (obj == null)
                 return null;
             return obj;         
