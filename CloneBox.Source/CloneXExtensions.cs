@@ -18,11 +18,11 @@ namespace CloneBox {
 
         public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, TOut destinationObject, CloneSettings settings) {
             CheckInputParameter(sourceObject);            
-            return (TOut)CloneProvider.CloneToInternal(sourceObject, destinationObject, settings);
+            return (TOut)CloneProvider.CloneToInternal(sourceObject, destinationObject, new CloneState(settings));
         }
 
         public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, CloneSettings settings) {            
-            return (TOut)CloneProvider.CloneInternal(sourceObject, settings);
+            return (TOut)CloneProvider.CloneInternal(sourceObject, new CloneState(settings));
         }
 
         private static void CheckInputParameter(object sourceObject) {

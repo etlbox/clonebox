@@ -51,6 +51,5 @@ namespace CloneBox {
             return DoNotCloneProperty?.Invoke(propInfo) ?? false;
         }
 
-        internal Dictionary<object, object> ExistingClones = new Dictionary<object, object>();
     }
 }
