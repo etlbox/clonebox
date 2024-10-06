@@ -7,104 +7,88 @@ using System.Reflection;
 
 namespace CloneBox {
 
-    internal class CloneProvider {
-
-        internal CloneSettings CloneSettings { get; set; }
-        internal Dictionary<object, object> ExistingClones = new Dictionary<object, object>();
-        InstanceCreator InstanceCreator;
-
-        public CloneProvider(CloneSettings cloneSettings) {
-            if (cloneSettings == null) cloneSettings = new CloneSettings();
-            Init(cloneSettings);
-        }
-
-        public void Init(CloneSettings cloneSettings) {
-            CloneSettings = cloneSettings;
-            InstanceCreator = new InstanceCreator() {
-                CloneSettings = CloneSettings
-            };
-        }
-        internal object CloneInternal(object sourceObject) {
+    internal static class CloneProvider {
+        internal static object CloneInternal(object sourceObject, CloneSettings cloneSettings) {
             if (sourceObject == null) return null;
             if (sourceObject.GetType().IsRealPrimitive()) return sourceObject;
-            if (ExistingClones.ContainsKey(sourceObject)) return ExistingClones[sourceObject];
-            if (CloneSettings.UseICloneableClone && sourceObject is ICloneable && !(sourceObject is Delegate) && !(sourceObject is Array)) {
+            if (cloneSettings.ExistingClones.ContainsKey(sourceObject)) return cloneSettings.ExistingClones[sourceObject];
+            if (cloneSettings.UseICloneableClone && sourceObject is ICloneable && !(sourceObject is Delegate) && !(sourceObject is Array)) {
                 var iclone = ((ICloneable)sourceObject).Clone();
-                ExistingClones.Add(sourceObject, iclone);
+                cloneSettings.ExistingClones.Add(sourceObject, iclone);
                 return iclone;
             } else {
-                var targetInst = InstanceCreator.CreateInstance(sourceObject.GetType(), sourceObject);
-                ExistingClones.Add(sourceObject, targetInst);
-                return CloneToInternal(sourceObject, targetInst);
+                var targetInst = InstanceCreator.CreateInstance(sourceObject.GetType(), cloneSettings, sourceObject);
+                cloneSettings.ExistingClones.Add(sourceObject, targetInst);
+                return CloneToInternal(sourceObject, targetInst, cloneSettings);
             }
         }
 
-        internal object CloneToInternal(object sourceObject, object targetObject) {
+        internal static object CloneToInternal(object sourceObject, object targetObject, CloneSettings cloneSettings) {
             if (targetObject == null) return null;
             var targetType = targetObject.GetType();
-            if (CloneSettings.DoNotCloneClassInternal(targetType)) return null;
+            if (cloneSettings.DoNotCloneClassInternal(targetType)) return null;
             if (targetType.IsRealPrimitive()) {
                 targetObject = sourceObject;
             } else if (typeof(IDictionary).IsAssignableFrom(targetType)) {
-                return FillDictionary(sourceObject, targetObject);
+                return FillDictionary(sourceObject, targetObject, cloneSettings);
             } else if (typeof(IDictionary<string, object>).IsAssignableFrom(targetType)) {
-                return FillDynamicDictionary(sourceObject, targetObject);
+                return FillDynamicDictionary(sourceObject, targetObject, cloneSettings);
             } else if (targetType.IsArray(targetObject)) {
-                return FillArray(sourceObject, targetObject);
+                return FillArray(sourceObject, targetObject, cloneSettings);
             } else if (targetType.IsIEnumerable()) {
-                return FillList(sourceObject, targetObject, targetType);
+                return FillList(sourceObject, targetObject, targetType, cloneSettings);
             } else {
-                CopyPropertiesAndFields(sourceObject, targetObject);
+                CopyPropertiesAndFields(sourceObject, targetObject, cloneSettings);
             }
 
             return targetObject;
         }
 
-        private void CopyPropertiesAndFields(object sourceObject, object targetObject) {
-            var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), CloneSettings);
+        private static void CopyPropertiesAndFields(object sourceObject, object targetObject, CloneSettings cloneSettings) {
+            var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), cloneSettings);
             HashSet<string> ignoreRelatedBackingField = new HashSet<string>();
             foreach (var prop in allProperties) {
                 if (prop.DoNotClone) ignoreRelatedBackingField.TryAdd(ReflectionExtensions.GetBackingFieldName(prop));
                 if (prop.CanBeCloned && prop.CanRead && prop.CanWrite)
-                    TryClonePropField(sourceObject, targetObject, prop);
+                    TryClonePropField(sourceObject, targetObject, prop, cloneSettings);
             }
-            foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), CloneSettings)) {
+            foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), cloneSettings)) {
                 if (field.CanBeCloned && field.CanRead && field.CanWrite && !ignoreRelatedBackingField.Contains(field.Name))
-                    TryClonePropField(sourceObject, targetObject, field);
+                    TryClonePropField(sourceObject, targetObject, field, cloneSettings);
             }
         }
 
 
-        private void TryClonePropField(object sourceObject, object targetObject, PropFieldInfo targetPropField) {
-            PropFieldInfo sourcePropField = PropFieldInfo.MatchingPropField(targetPropField.MemberType, sourceObject, targetPropField.Name, CloneSettings);
+        private static void TryClonePropField(object sourceObject, object targetObject, PropFieldInfo targetPropField, CloneSettings cloneSettings) {
+            PropFieldInfo sourcePropField = PropFieldInfo.MatchingPropField(targetPropField.MemberType, sourceObject, targetPropField.Name, cloneSettings);
             if (sourcePropField?.Type == null) return;
 
             var paramInfo = sourcePropField.TryGetIndexedParameters();
             if (sourcePropField.MemberType == MemberType.Property && (paramInfo?.Length ?? 0) > 0) {
                 for (int i = 0; i < paramInfo.Length; i++) {
                     var index = new object[] { i };
-                    object propFieldClone = CloneInternal(sourcePropField.PropInfo.GetValue(sourceObject, index));
+                    object propFieldClone = CloneInternal(sourcePropField.PropInfo.GetValue(sourceObject, index), cloneSettings);
                     targetPropField.PropInfo.SetValue(targetObject, propFieldClone, index);
                 }
             } else {
-                object propFieldClone = CloneInternal(sourcePropField.GetValue(sourceObject));
+                object propFieldClone = CloneInternal(sourcePropField.GetValue(sourceObject), cloneSettings);
                 targetPropField.SetValue(targetObject, propFieldClone);
             }
 
         }
 
 
-        private object FillList(object sourceObject, object targetInst, Type targetType) {
+        private static object FillList(object sourceObject, object targetInst, Type targetType, CloneSettings cloneSettings) {
             var enumerable = (IEnumerable)sourceObject;
             if (HasEntriesInEnumerable(sourceObject, targetType, enumerable)) {
                 try {
                     MethodInfo addMethod = targetType.DetermineAddMethod();
                     foreach (var item in enumerable) {
-                        var element = CloneInternal(item);
+                        var element = CloneInternal(item,cloneSettings);
                         addMethod.Invoke(targetInst, new[] { element });
                     }
                 } catch {
-                    CloneSettings.Logger?.LogDebug("Could not copy data into enumerable of type '{typeName}' - is this enumerable readonly?", targetType.Name);
+                    cloneSettings.Logger?.LogDebug("Could not copy data into enumerable of type '{typeName}' - is this enumerable readonly?", targetType.Name);
                     return sourceObject;
                 }
             }
@@ -122,27 +106,27 @@ namespace CloneBox {
             }
         }
 
-        private object FillDictionary(object sourceObject, object targetInst) {
+        private static object FillDictionary(object sourceObject, object targetInst, CloneSettings cloneSettings) {
             var targetDict = targetInst as IDictionary;
             var sourceDict = sourceObject as IDictionary;
             foreach (var key in sourceDict.Keys)
-                targetDict?.Add(key, CloneInternal(sourceDict[key]));
+                targetDict?.Add(key, CloneInternal(sourceDict[key], cloneSettings));
 
             return targetDict;
         }
 
-        private object FillDynamicDictionary(object sourceObject, object targetInst) {
+        private static object FillDynamicDictionary(object sourceObject, object targetInst, CloneSettings cloneSettings) {
             var targetDict = targetInst as IDictionary<string, object>;
             var sourceDict = sourceObject.ToDictionary();
 
             foreach (var key in sourceDict.Keys)
-                targetDict?.Add(key, CloneInternal(sourceDict[key]));
+                targetDict?.Add(key, CloneInternal(sourceDict[key], cloneSettings));
 
             return targetDict;
         }
 
 
-        private object FillArray(object sourceObject, object targetObject) {
+        private static object FillArray(object sourceObject, object targetObject, CloneSettings cloneSettings) {
             var sourceArray = sourceObject as Array;
             var targetArray = targetObject as Array;
 
@@ -154,7 +138,7 @@ namespace CloneBox {
                 if (dimension == array.Rank) {
                     if (IsWithinSourceArrayBounds(sourceArray, indices)) {
                         var curValue = sourceArray.GetValue(indices);
-                        var clonedValue = CloneInternal(curValue);
+                        var clonedValue = CloneInternal(curValue, cloneSettings);
                         array.SetValue(clonedValue, indices);
                     }
                     return;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace CloneBox {
@@ -49,5 +50,7 @@ namespace CloneBox {
                 return true;
             return DoNotCloneProperty?.Invoke(propInfo) ?? false;
         }
+
+        internal Dictionary<object, object> ExistingClones = new Dictionary<object, object>();
     }
 }

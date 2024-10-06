@@ -17,14 +17,12 @@ namespace CloneBox {
             => CloneXTo<TIn, TOut>(sourceObject, destinationObject, new CloneSettings());
 
         public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, TOut destinationObject, CloneSettings settings) {
-            CheckInputParameter(sourceObject);
-            var cloneProvider = new CloneProvider(settings);
-            return (TOut)cloneProvider.CloneToInternal(sourceObject, destinationObject);
+            CheckInputParameter(sourceObject);            
+            return (TOut)CloneProvider.CloneToInternal(sourceObject, destinationObject, settings);
         }
 
-        public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, CloneSettings settings) {
-            var cloneProvider = new CloneProvider(settings);
-            return (TOut)cloneProvider.CloneInternal(sourceObject);
+        public static TOut CloneXTo<TIn, TOut>(this TIn sourceObject, CloneSettings settings) {            
+            return (TOut)CloneProvider.CloneInternal(sourceObject, settings);
         }
 
         private static void CheckInputParameter(object sourceObject) {
@@ -32,14 +30,12 @@ namespace CloneBox {
                 throw new InvalidOperationException("Cannot clone a null object.");
         }
 
-        public static T CreateInstance<T>() {
-            var instanceCreator = new InstanceCreator();
-            return (T)instanceCreator.CreateInstance(typeof(T));
+        public static T CreateInstance<T>() {            
+            return (T)InstanceCreator.CreateInstance(typeof(T), new CloneSettings());
         }
 
-        public static T CreateInstance<T>(T templateObject) {
-            var instanceCreator = new InstanceCreator();
-            return (T)instanceCreator.CreateInstance(typeof(T), templateObject);
+        public static T CreateInstance<T>(T templateObject) {            
+            return (T)InstanceCreator.CreateInstance(typeof(T), new CloneSettings(),  templateObject);
         }
 
     }

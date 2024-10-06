@@ -3,10 +3,9 @@ using System;
 using System.Collections.Generic;
 
 namespace CloneBox {
-    internal class InstanceCreator {
+    internal static class InstanceCreator {
 
-        public CloneSettings CloneSettings { get; set; } = new CloneSettings();
-        public object CreateInstance(Type type, object sourceObject = null) {
+        public static object CreateInstance(Type type, CloneSettings cloneSettings, object sourceObject = null) {
             object newInstance = null;
             if (type == null) return null;
             if (type.IsArray(sourceObject)) {
@@ -14,13 +13,13 @@ namespace CloneBox {
             } else if (sourceObject != null && sourceObject is Delegate) {
                 return (sourceObject as Delegate).Clone();
             } else {
-                newInstance = CreateObjectInstance(type);
+                newInstance = CreateObjectInstance(type, cloneSettings);
             }
             return newInstance;
         }
 
 
-        private object CreateObjectInstance(Type type) {
+        private static object CreateObjectInstance(Type type, CloneSettings cloneSettings) {
             if (type.IsValueType)
                 return Activator.CreateInstance(type);
             bool hasDefaultConstructor = type.GetConstructor(Type.EmptyTypes) != null;
@@ -29,21 +28,21 @@ namespace CloneBox {
                     return Activator.CreateInstance(type);
 
             } catch {
-                CloneSettings.Logger?.LogDebug("No default constructor found for '{typeName}' - trying to use other constructors using default values.", type.Name);
+                cloneSettings.Logger?.LogDebug("No default constructor found for '{typeName}' - trying to use other constructors using default values.", type.Name);
             }
 
-            var bindingFlags = CloneSettings.ConstructorBindings;
+            var bindingFlags = cloneSettings.ConstructorBindings;
             var constructors = type.GetConstructors(bindingFlags);
             foreach (var constructor in constructors) {
                 try {
                     var parameters = constructor.GetParameters();
                     var param = new List<object>();
                     foreach (var p in parameters)
-                        param.Add(CreateInstance(p.ParameterType));
+                        param.Add(CreateInstance(p.ParameterType, cloneSettings));
                     var newList = Activator.CreateInstance(type, bindingAttr: bindingFlags, binder: null, args: param.ToArray(), culture: null);
                     return newList;
                 } catch {
-                    CloneSettings.Logger?.LogDebug("Constructor {rank} for type '{typeName}' failed using default values as parameter", constructors.Rank, type.Name);
+                    cloneSettings.Logger?.LogDebug("Constructor {rank} for type '{typeName}' failed using default values as parameter", constructors.Rank, type.Name);
 
                 }
             }
@@ -57,7 +56,7 @@ namespace CloneBox {
 
         }
 
-        private object CreateArrayInstance(Type type, object sourceObject = null) {
+        private static object CreateArrayInstance(Type type, object sourceObject = null) {
             Array sourceArray = sourceObject as Array;
             if (sourceArray == null || sourceArray.Rank == 0) return Create0Array(type);
             ArrayDimensions dimensions = DetermineArrayDimensions(sourceArray);
