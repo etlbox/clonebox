@@ -8,8 +8,12 @@ namespace CloneBox.Benchmark {
 
 
         static void Main(string[] args) {
-
             //var summary = BenchmarkRunner.Run<SimpleDataClone>();
+            //RunSimpleBenchmark();
+            RunExampleBenchmark();
+        }
+
+        private static void RunSimpleBenchmark() {
             var test1 = new SimpleDataClone();
             test1.N = 500000;
             test1.Setup();
@@ -26,9 +30,9 @@ namespace CloneBox.Benchmark {
             Console.WriteLine($"Done - took {timer.Elapsed}");
         }
 
-        static void FirstExampleBenchmark() {
+        static void RunExampleBenchmark() {
 
-            int TestObjects = 200;
+            int TestObjects = 20000;
 
             var results = new Dictionary<string, TimeSpan>();
             Console.WriteLine("CloneBox Benchmark");
