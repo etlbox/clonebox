@@ -38,44 +38,68 @@ namespace CloneBox {
             } else if (targetType.IsIEnumerable()) {
                 return FillList(sourceObject, targetObject, targetType, state);
             } else {
-                CopyPropertiesAndFields(sourceObject, targetObject, state);
+                CopyFields(sourceObject, targetObject, state);
             }
 
             return targetObject;
         }
-
-        private static void CopyPropertiesAndFields(object sourceObject, object targetObject, CloneState state) {
-            var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), state.Settings);
-            HashSet<string> ignoreRelatedBackingField = new HashSet<string>();
-            foreach (var prop in allProperties) {
-                if (prop.DoNotClone) ignoreRelatedBackingField.TryAdd(ReflectionExtensions.GetBackingFieldName(prop));
-                if (prop.CanBeCloned && prop.CanRead && prop.CanWrite)
-                    TryClonePropField(sourceObject, targetObject, prop, state);
-            }
-            foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), state.Settings)) {
-                if (field.CanBeCloned && field.CanRead && field.CanWrite && !ignoreRelatedBackingField.Contains(field.Name))
-                    TryClonePropField(sourceObject, targetObject, field, state);
-            }
-        }
-
-
-        private static void TryClonePropField(object sourceObject, object targetObject, PropFieldInfo targetPropField, CloneState state) {
-            PropFieldInfo sourcePropField = PropFieldInfo.MatchingPropField(targetPropField.MemberType, sourceObject, targetPropField.Name, state.Settings);
-            if (sourcePropField?.Type == null) return;
-
-            var paramInfo = sourcePropField.TryGetIndexedParameters();
-            if (sourcePropField.MemberType == MemberType.Property && (paramInfo?.Length ?? 0) > 0) {
-                for (int i = 0; i < paramInfo.Length; i++) {
-                    var index = new object[] { i };
-                    object propFieldClone = CloneInternal(sourcePropField.PropInfo.GetValue(sourceObject, index), state);
-                    targetPropField.PropInfo.SetValue(targetObject, propFieldClone, index);
+        private static void CopyFields(object sourceObject, object targetObject, CloneState state) {
+            var targetfields = GetAllFields(targetObject);
+            var sourceFields = GetAllFields(sourceObject);
+            foreach (var targetFieldInfo in targetfields) {
+                if (sourceFields.TryGetValue(targetFieldInfo.Key, out var sourceFieldInfo)) {
+                    var sourceValue = sourceFieldInfo.GetValue(sourceObject);
+                    var targetValue = CloneInternal(sourceValue, state);
+                    targetFieldInfo.Value.SetValue(targetObject, targetValue);
                 }
-            } else {
-                object propFieldClone = CloneInternal(sourcePropField.GetValue(sourceObject), state);
-                targetPropField.SetValue(targetObject, propFieldClone);
             }
-
         }
+
+        private static Dictionary<string,FieldInfo> GetAllFields(object targetObject) {
+            Dictionary<string,FieldInfo> result = new Dictionary<string,FieldInfo>();
+            var targetType = targetObject.GetType();
+            do {
+                if (targetType == typeof(ContextBoundObject)) break;
+                foreach (var fieldInfo in targetType.GetDeclaredFields())
+                    result.Add(fieldInfo.Name, fieldInfo);
+                targetType = targetType.BaseType;
+            }
+            while (targetType != null);
+            return result;
+        }
+
+        //private static void CopyFields(object sourceObject, object targetObject, CloneState state) {
+        //    var allProperties = PropFieldInfo.GetAllProperties(targetObject.GetType(), state.Settings);
+        //    HashSet<string> ignoreRelatedBackingField = new HashSet<string>();
+        //    foreach (var prop in allProperties) {
+        //        if (prop.DoNotClone) ignoreRelatedBackingField.TryAdd(ReflectionExtensions.GetBackingFieldName(prop));
+        //        if (prop.CanBeCloned && prop.CanRead && prop.CanWrite)
+        //            TryClonePropField(sourceObject, targetObject, prop, state);
+        //    }
+        //    foreach (var field in PropFieldInfo.GetAllFields(targetObject.GetType(), state.Settings)) {
+        //        if (field.CanBeCloned && field.CanRead && field.CanWrite && !ignoreRelatedBackingField.Contains(field.Name))
+        //            TryClonePropField(sourceObject, targetObject, field, state);
+        //    }
+        //}
+
+
+        //private static void TryClonePropField(object sourceObject, object targetObject, PropFieldInfo targetPropField, CloneState state) {
+        //    PropFieldInfo sourcePropField = PropFieldInfo.MatchingPropField(targetPropField.MemberType, sourceObject, targetPropField.Name, state.Settings);
+        //    if (sourcePropField?.Type == null) return;
+
+        //    var paramInfo = sourcePropField.TryGetIndexedParameters();
+        //    if (sourcePropField.MemberType == MemberType.Property && (paramInfo?.Length ?? 0) > 0) {
+        //        for (int i = 0; i < paramInfo.Length; i++) {
+        //            var index = new object[] { i };
+        //            object propFieldClone = CloneInternal(sourcePropField.PropInfo.GetValue(sourceObject, index), state);
+        //            targetPropField.PropInfo.SetValue(targetObject, propFieldClone, index);
+        //        }
+        //    } else {
+        //        object propFieldClone = CloneInternal(sourcePropField.GetValue(sourceObject), state);
+        //        targetPropField.SetValue(targetObject, propFieldClone);
+        //    }
+
+        //}
 
 
         private static object FillList(object sourceObject, object targetInst, Type targetType, CloneState state) {
@@ -84,7 +108,7 @@ namespace CloneBox {
                 try {
                     MethodInfo addMethod = targetType.DetermineAddMethod();
                     foreach (var item in enumerable) {
-                        var element = CloneInternal(item,state);
+                        var element = CloneInternal(item, state);
                         addMethod.Invoke(targetInst, new[] { element });
                     }
                 } catch {

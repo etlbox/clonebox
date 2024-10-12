@@ -42,6 +42,9 @@ namespace CloneBox {
             return string.Format("<{0}>k__BackingField", prop.Name);
         }
 
+        internal static FieldInfo[] GetDeclaredFields(this Type t) {
+            return t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+        }
 
     }
 }
