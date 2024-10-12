@@ -165,6 +165,35 @@ namespace CloneBox.Tests {
             clone.CheckValuesPublicPropsOnlyBinding().Should().BeTrue();
         }
 
+        public class OnlyReadonly {
+            public readonly object Obj1;
+            public readonly int Obj2;
+            public readonly string Str1;
+
+            public OnlyReadonly(object obj1, int obj2, string str1)
+            {
+                Obj1 = obj1;
+                Obj2 = obj2;
+                Str1 = str1;
+            }
+        }
+
+        [Fact]
+        public void OnlyReadonlyFields() {
+            OnlyReadonly sub = new OnlyReadonly("S", 2, "Sub");
+            OnlyReadonly orig = new OnlyReadonly(sub, 5, "x");
+                                
+            var clone = orig.CloneX();
+            clone.Should().NotBeSameAs(orig);
+            clone.Obj1.Should().NotBeSameAs(sub);
+            (clone.Obj1 as OnlyReadonly).Obj1.Should().Be("S");
+            (clone.Obj1 as OnlyReadonly).Obj2.Should().Be(2);
+            (clone.Obj1 as OnlyReadonly).Str1.Should().Be("Sub");
+            clone.Obj2.Should().Be(5);
+            clone.Str1.Should().Be("x");
+            
+        }
+
 
     }
 }
