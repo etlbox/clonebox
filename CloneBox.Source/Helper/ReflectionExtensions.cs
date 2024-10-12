@@ -8,9 +8,24 @@ using System.Reflection;
 namespace CloneBox {
     internal static class ReflectionExtensions {
         //See also https://stackoverflow.com/questions/1827425/how-to-check-programmatically-if-a-type-is-a-struct-or-a-class
-        public static bool IsRealPrimitive(this Type type) {
+
+        static HashSet<Type> PrimitiveTypes = new HashSet<Type> {
+            typeof(string),
+            typeof(DateTime),
+            typeof(DateTimeOffset),
+            typeof(TimeSpan),
+            typeof(Guid),
+            typeof(DBNull),
+            typeof(IntPtr), 
+            typeof(UIntPtr),
+            Type.GetType("System.RuntimeType"),
+            Type.GetType("System.RuntimeTypeHandle"),
+            StringComparer.Ordinal.GetType(),
+            StringComparer.CurrentCulture.GetType(),
+        };
+        public static bool DoReturnReference(this Type type) {
             if (type == null) return false;
-            return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(DateTime) || type == typeof(TimeSpan) || type == typeof(Guid) || type == typeof(DBNull);
+            return type.IsPrimitive || type.IsEnum || PrimitiveTypes.Contains(type);
         }
 
         public static bool IsDynamic(this Type type, object obj)

@@ -28,7 +28,7 @@ namespace CloneBox {
         internal Dictionary<Type, Func<object, object, CloneState, object>> ExistingCloners = new Dictionary<Type, Func<object, object, CloneState, object>>();
 
         public void AddExistingClone(object from, object to) {
-            if (!from.GetType().IsRealPrimitive() && !ExistingClones.ContainsKey(from))
+            if (!from.GetType().DoReturnReference() && !ExistingClones.ContainsKey(from))
                 ExistingClones.Add(from, to);
         }
 

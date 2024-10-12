@@ -10,7 +10,7 @@ namespace CloneBox {
     internal static class CloneProvider {
         internal static object CloneInternal(object sourceObject, CloneState state) {
             if (sourceObject == null) return null;
-            if (sourceObject.GetType().IsRealPrimitive()) return sourceObject;
+            if (sourceObject.GetType().DoReturnReference()) return sourceObject;
             if (state.ExistingClones.ContainsKey(sourceObject)) return state.ExistingClones[sourceObject];
             if (state.Settings.UseICloneableClone && sourceObject is ICloneable && !(sourceObject is Delegate) && !(sourceObject is Array)) {
                 var iclone = ((ICloneable)sourceObject).Clone();
@@ -27,7 +27,7 @@ namespace CloneBox {
             if (targetObject == null) return null;
             var targetType = targetObject.GetType();
             if (state.Settings.DoNotCloneClassInternal(targetType)) return null;
-            if (targetType.IsRealPrimitive()) {
+            if (targetType.DoReturnReference()) {
                 targetObject = sourceObject;
             } else if (typeof(IDictionary).IsAssignableFrom(targetType)) {
                 return FillDictionary(sourceObject, targetObject, state);
