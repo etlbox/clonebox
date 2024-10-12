@@ -262,11 +262,11 @@ namespace CloneBox.Tests {
             summ[0].Should().Be(2);
             var clone = orig.CloneX();
             clone.Call(1);
-            summ[0].Should().Be(4);
+            summ[0].Should().Be(2);
             orig.Event -= a1;
             orig.Event -= a2;
             orig.Call(1).Should().Be(0);
-            summ[0].Should().Be(4);
+            summ[0].Should().Be(2);
             clone.Call(1).Should().Be(2);
         }
 

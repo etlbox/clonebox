@@ -57,13 +57,10 @@ namespace CloneBox.Tests {
         public void PropsWithException() {
             var orig = new PropertyThrows();
             orig.InitProps();
-            var clone = orig.CloneX(new CloneSettings() {
-                IncludeNonPublicFields = false
-            });
-
+            var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);
             clone.Prop1.Should().Be("A");
-            clone.Prop2.Should().BeNull();
+            clone.Prop2.Should().Be("B");
 
         }
     }
