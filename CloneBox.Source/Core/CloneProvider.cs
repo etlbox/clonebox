@@ -55,12 +55,12 @@ namespace CloneBox {
             }
         }
 
-        private static Dictionary<string,FieldInfo> GetAllFields(object targetObject) {
-            Dictionary<string,FieldInfo> result = new Dictionary<string,FieldInfo>();
+        private static Dictionary<string, FieldInfo> GetAllFields(object targetObject) {
+            Dictionary<string, FieldInfo> result = new Dictionary<string, FieldInfo>();
             var targetType = targetObject.GetType();
             do {
                 if (targetType == typeof(ContextBoundObject)) break;
-                foreach (var fieldInfo in targetType.GetDeclaredFields())                    
+                foreach (var fieldInfo in targetType.GetDeclaredFields())
                     result.TryAddItem(fieldInfo.Name, fieldInfo);
                 targetType = targetType.BaseType;
             }
@@ -152,8 +152,47 @@ namespace CloneBox {
 
         private static object FillArray(object sourceObject, object targetObject, CloneState state) {
             var sourceArray = sourceObject as Array;
-            var targetArray = targetObject as Array;
+            var targetArray = targetObject as Array;            
+            if (targetArray.Rank == 1 && targetObject.GetType().GetElementType().MakeArrayType() == targetArray.GetType()
+                && sourceArray.GetLowerBound(0) == 0 && targetArray.GetLowerBound(0) == 0) {
+                Fill1DimArray(sourceArray, targetArray, state);
+            } else if (targetArray.Rank == 2 && 
+                targetObject.GetType().GetElementType().MakeArrayType(2) == targetArray.GetType() &&
+                sourceArray.GetLowerBound(0) == 0 && sourceArray.GetLowerBound(1) == 0 && 
+                targetArray.GetLowerBound(0) == 0 && targetArray.GetLowerBound(1) == 0) {
+                Fill2DimArray(sourceArray, targetArray, state);
+            } else {
+                FillMultiDimArray(sourceArray, targetArray, state);
+            }
 
+            return targetArray;
+
+        }
+
+        private static void Fill1DimArray(Array sourceArray, Array targetArray, CloneState state) {
+            for (int i = 0; i < sourceArray.Length; i++) {
+                if (i >= targetArray.Length)
+                    break;
+                var sourceValue = sourceArray.GetValue(i);
+                var targetValue = CloneInternal(sourceValue, state);
+                targetArray.SetValue(targetValue, i);
+            }
+        }
+
+        private static void Fill2DimArray(Array sourceArray, Array targetArray, CloneState state) {
+            for (int i = 0; i < sourceArray.GetLength(0); i++) {
+                for (int j = 0; j < sourceArray.GetLength(1); j++) {
+                    if (i >= targetArray.GetLength(0) || j >= targetArray.GetLength(1))
+                        break;
+                    var sourceValue = sourceArray.GetValue(i, j);
+                    var targetValue = CloneInternal(sourceValue, state);
+                    targetArray.SetValue(targetValue, i, j);
+                }
+            }
+        }
+
+
+        private static void FillMultiDimArray(Array sourceArray, Array targetArray, CloneState state) {
             int[] indices = new int[targetArray.Rank];
 
             SetValues(targetArray, 0);
@@ -182,10 +221,6 @@ namespace CloneBox {
                 }
                 return true;
             }
-
-            return targetArray;
-
         }
-
     }
 }
