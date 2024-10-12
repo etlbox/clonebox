@@ -16,7 +16,7 @@ namespace CloneBox {
             typeof(TimeSpan),
             typeof(Guid),
             typeof(DBNull),
-            typeof(IntPtr), 
+            typeof(IntPtr),
             typeof(UIntPtr),
             Type.GetType("System.RuntimeType"),
             Type.GetType("System.RuntimeTypeHandle"),
@@ -25,7 +25,19 @@ namespace CloneBox {
         };
         public static bool DoReturnReference(this Type type) {
             if (type == null) return false;
-            return type.IsPrimitive || type.IsEnum || PrimitiveTypes.Contains(type);
+            return type.IsPrimitive ||
+                type.IsEnum ||
+                PrimitiveTypes.Contains(type) ||
+                type.IsPointer ||
+                type.IsCOMObject ||
+                type.IsSubclassOf(typeof(System.Runtime.ConstrainedExecution.CriticalFinalizerObject)) ||
+                type.FullName.StartsWith("System.Runtime.Remoting.") ||
+                type.FullName.StartsWith("System.Reflection.") ||
+                type.FullName.StartsWith("System.Collections.Generic.GenericEqualityComparer") ||
+                type.FullName.StartsWith("System.Collections.Generic.ObjectEqualityComparer") ||
+                type.FullName.StartsWith("System.Collections.Generic.EnumEqualityComparer") ||
+                type.FullName.StartsWith("System.Collections.Generic.NullableEqualityComparer") ||
+                type.FullName.StartsWith("System.Collections.Generic.ByteEqualityComparer");
         }
 
         public static bool IsDynamic(this Type type, object obj)
