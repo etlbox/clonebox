@@ -6,7 +6,10 @@ namespace CloneBox {
     internal class CloneState {
         private static CloneState _instance;
         public static CloneState GetInstance(CloneSettings settings = null) {
-            return _instance ?? (_instance = new CloneState(settings));
+            if (settings?.PreCompileCloners == true)
+                return _instance ?? (_instance = new CloneState(settings));
+            else 
+                return new CloneState(settings);
         }
 
         public CloneSettings Settings { get; set; }

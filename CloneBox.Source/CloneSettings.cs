@@ -12,6 +12,8 @@ namespace CloneBox {
         public bool IncludePublicConstructors { get; set; } = true;
         public bool IncludeNonPublicConstructors { get; set; } = true;
 
+        public bool PreCompileCloners { get; set; } = false;
+
         public bool UseICloneableClone { get; set; } = false;
         internal BindingFlags PropertyBindings =>
             (IncludePublicProperties ? BindingFlags.Public : 0) |
