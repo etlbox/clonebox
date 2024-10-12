@@ -16,7 +16,12 @@ namespace CloneBox {
             return dict;
         }
 
-        public static void TryAdd<T>(this ICollection<T> collection, T item) {
+        public static void TryAddItem<TKey,TValue>(this IDictionary<TKey,TValue> dict, TKey key, TValue value) {
+            if (!dict.ContainsKey(key))
+                dict.Add(key, value);
+        }
+
+        public static void TryAddItem<T>(this ICollection<T> collection, T item) {
             if (!collection.Contains(item))
                 collection.Add(item);
         }

@@ -60,8 +60,8 @@ namespace CloneBox {
             var targetType = targetObject.GetType();
             do {
                 if (targetType == typeof(ContextBoundObject)) break;
-                foreach (var fieldInfo in targetType.GetDeclaredFields())
-                    result.Add(fieldInfo.Name, fieldInfo);
+                foreach (var fieldInfo in targetType.GetDeclaredFields())                    
+                    result.TryAddItem(fieldInfo.Name, fieldInfo);
                 targetType = targetType.BaseType;
             }
             while (targetType != null);
