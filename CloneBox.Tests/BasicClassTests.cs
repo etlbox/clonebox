@@ -3,7 +3,7 @@ using Xunit;
 
 namespace CloneBox.Tests {
     public class BasicClassTests {
-
+               
         public class ClassWithNullable {
             public int? A { get; set; }
 
@@ -23,6 +23,7 @@ namespace CloneBox.Tests {
         }
 
         public class C2 {
+            public int X { get; set; }
         }
 
 
@@ -30,7 +31,7 @@ namespace CloneBox.Tests {
         [Fact]
         public void ClassWithObject() {
             var c1 = new C1();
-            c1.C = new C2();
+            c1.C = new C2() {  X = 3 };
             var cloned = c1.CloneX();
             cloned.Should().NotBeNull();
             cloned.Should().NotBeSameAs(c1);

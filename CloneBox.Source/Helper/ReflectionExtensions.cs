@@ -73,5 +73,7 @@ namespace CloneBox {
             return t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
         }
 
+        internal static MethodInfo GetPrivateStaticMethod(this Type t, string methodName) 
+            => t.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static);
     }
 }
