@@ -28,6 +28,18 @@ namespace CloneBox {
             if (targetObject == null) return null;
             var targetType = targetObject.GetType();
             if (state.Settings.DoNotCloneClassInternal(targetType)) return null;
+
+            //var key = Tuple.Create(sourceObject?.GetType(), targetObject?.GetType());
+            //Action<object, object, CloneState> clonerExpression;
+
+            //if (!CloneState.ExistingCompleteCloners.TryGetValue(key, out clonerExpression)) {
+            //    clonerExpression = ExpressionGenerator.CreateCloneToInternalExpression(sourceObject.GetType(), targetType);
+            //    CloneState.ExistingCompleteCloners[key] = clonerExpression;
+            //}
+
+            //clonerExpression?.Invoke(sourceObject, targetObject, state);
+            //return targetObject;
+
             if (targetType.DoReturnReference()) {
                 targetObject = sourceObject;
             } else if (typeof(IDictionary).IsAssignableFrom(targetType)) {
@@ -79,7 +91,7 @@ namespace CloneBox {
         //    return result;
         //}
 
-        private static object FillList(object sourceObject, object targetInst, Type targetType, CloneState state) {
+        internal static object FillList(object sourceObject, object targetInst, Type targetType, CloneState state) {
             var enumerable = (IEnumerable)sourceObject;
             if (HasEntriesInEnumerable(sourceObject, targetType, enumerable)) {
                 try {
@@ -107,7 +119,7 @@ namespace CloneBox {
             }
         }
 
-        private static object FillDictionary(object sourceObject, object targetInst, CloneState state) {
+        internal static object FillDictionary(object sourceObject, object targetInst, CloneState state) {
             var targetDict = targetInst as IDictionary;
             var sourceDict = sourceObject as IDictionary;
             foreach (var key in sourceDict.Keys)
@@ -116,7 +128,7 @@ namespace CloneBox {
             return targetDict;
         }
 
-        private static object FillDynamicDictionary(object sourceObject, object targetInst, CloneState state) {
+        internal static object FillDynamicDictionary(object sourceObject, object targetInst, CloneState state) {
             var targetDict = targetInst as IDictionary<string, object>;
             var sourceDict = sourceObject.ToDictionary();
 
@@ -127,7 +139,7 @@ namespace CloneBox {
         }
 
 
-        private static object FillArray(object sourceObject, object targetObject, CloneState state) {
+        internal static object FillArray(object sourceObject, object targetObject, CloneState state) {
             var sourceArray = sourceObject as Array;
             var targetArray = targetObject as Array;            
             if (targetArray.Rank == 1 && targetObject.GetType().GetElementType().MakeArrayType() == targetArray.GetType()
@@ -146,15 +158,29 @@ namespace CloneBox {
 
         }
 
-        private static void Fill1DimArray(Array sourceArray, Array targetArray, CloneState state) {
-            for (int i = 0; i < sourceArray.Length; i++) {
-                if (i >= targetArray.Length)
-                    break;
-                var sourceValue = sourceArray.GetValue(i);
-                var targetValue = CloneInternal(sourceValue, state);
-                targetArray.SetValue(targetValue, i);
+        private static object Fill1DimArray(object sourceObject, object targetObject, CloneState state) {
+            var sourceArray = sourceObject as Array;
+            var targetArray = targetObject as Array;
+            var elementType = sourceArray.GetType().GetElementType();
+
+            Tuple<Type,Type> key = Tuple.Create(sourceArray.GetType().GetElementType(), targetArray.GetType().GetElementType());
+            if (!CloneState.Existing1DimArrayCloners.TryGetValue(key, out var arrayFiller)) {
+                arrayFiller = ExpressionGenerator.Create1DimArrayFillExpression(elementType);
+                CloneState.Existing1DimArrayCloners[key] = arrayFiller;
             }
+            arrayFiller(sourceArray, targetArray, state);
+            return targetArray;
         }
+
+        //private static void Fill1DimArray(Array sourceArray, Array targetArray, CloneState state) {
+        //    for (int i = 0; i < sourceArray.Length; i++) {
+        //        if (i >= targetArray.Length)
+        //            break;
+        //        var sourceValue = sourceArray.GetValue(i);
+        //        var targetValue = CloneInternal(sourceValue, state);
+        //        targetArray.SetValue(targetValue, i);
+        //    }
+        //}
 
         private static void Fill2DimArray(Array sourceArray, Array targetArray, CloneState state) {
             for (int i = 0; i < sourceArray.GetLength(0); i++) {

@@ -27,6 +27,8 @@ namespace CloneBox {
 
         static internal Dictionary<Tuple<Type,Type>, Action<object, object, CloneState>> ExistingCloners = new Dictionary<Tuple<Type,Type>, Action<object, object, CloneState>>();
 
+        static internal Dictionary<Tuple<Type, Type>, Action<object, object, CloneState>> ExistingCompleteCloners = new Dictionary<Tuple<Type, Type>, Action<object, object, CloneState>>();
+        static internal Dictionary<Tuple<Type, Type>, Action<Array, Array, CloneState>> Existing1DimArrayCloners = new Dictionary<Tuple<Type, Type>, Action<Array, Array, CloneState>>();
         public void AddExistingClone(object from, object to) {
             if (!from.GetType().DoReturnReference() && !ExistingClones.ContainsKey(from))
                 ExistingClones.Add(from, to);
