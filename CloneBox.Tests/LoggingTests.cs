@@ -16,7 +16,7 @@ namespace CloneBox.Tests {
                 .CreateLogger();
         }
         [Fact]
-        public void CheckLoggingOutput() {
+        public void LoggerCanBeAttachedToComplexClone() {
 
             var orig = ComplexClass.CreateTestObject();
 

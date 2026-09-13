@@ -18,7 +18,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void SimpleTuple() {
+        public void TupleOfIntsIsCloned() {
             var orig = new Tuple<int, int>(1, 2).CloneX();
             var clone = orig.CloneX();
 
@@ -28,13 +28,13 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void SimpleTuple7Items() {
+        public void SevenItemTupleIsCloned() {
             var clone = new Tuple<int, int, int, int, int, int, int>(1, 2, 3, 4, 5, 6, 7).CloneX();
             clone.Item7.Should().Be(7);
         }
 
         [Fact]
-        public void TupleWithGeneric() {
+        public void TupleCycleThroughGenericValue() {
             var orig = new Tuple<int, GENERIC<object>>(1, new GENERIC<object>());
             orig.Item2.Value = orig;
             var clone = orig.CloneX();
@@ -43,7 +43,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void PrimitiveGeneric() {
+        public void GenericClassWithPrimitiveValue() {
             var orig = new GENERIC<int>();
             orig.Value = 12;
             var clone = orig.CloneX();
@@ -52,7 +52,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectGeneric() {
+        public void GenericClassWithObjectValue() {
             var orig = new GENERIC<object>();
             orig.Value = "12";
             var clone = orig.CloneX();
@@ -61,7 +61,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void TupleWithInheritance() {
+        public void TupleSharesClonedInheritedReferences() {
             var child = new CHILD { X = 1, Y = 2 };
             var orig = new Tuple<BASE, CHILD>(child, child);
             var clone = orig.CloneX();

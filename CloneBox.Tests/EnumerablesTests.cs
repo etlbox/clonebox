@@ -9,7 +9,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void IntList() {
+        public void ListOfIntsIsClonedIndependently() {
             var orig = new List<int> { 1, 2, 3, 0, 1, 3 };
             var cloned = orig.CloneX();
             cloned.Should().NotBeSameAs(orig);
@@ -19,7 +19,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NullableIntList() {
+        public void ListOfNullableIntsKeepsNulls() {
             var orig = new List<int?> { 1, 2, null, 0, null, 3 };
             var cloned = orig.CloneX();
             cloned.Should().NotBeSameAs(orig);
@@ -29,7 +29,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void Dictionary() {
+        public void DictionaryOfNullableDecimalsIsCloned() {
             var orig = new Dictionary<string, decimal?>();
             orig["a"] = 1;
             orig["b"] = null;
@@ -54,7 +54,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ICollections() {
+        public void InterfaceTypedCollectionsAreDeepCloned() {
             CollectionObject orig = new CollectionObject() {
                 IntCollection = new List<int>() { 1, 2, 3 },
                 ObjectCollection = new List<BasicObject>() {
@@ -78,7 +78,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CloneDictionaryObject() {
+        public void DictionaryPropertyIsDeepCloned() {
             var orig = new DictionaryObject {
                 Collection = {
                     { 1, new BasicObject() { Id = 1, Name = "Test1" } },
@@ -103,7 +103,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CustomCollection() {
+        public void CustomCollectionCopiesItemsAndCustomState() {
             var orig = new CustomCollectionObject<BasicObject>(100, "test")
             {
                 new BasicObject() { Id = 1, Name = "Test1" },
@@ -116,7 +116,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ListWithObject() {
+        public void ListOfObjectsIsDeepCloned() {
             List<BasicObject> orig = new List<BasicObject>() {
                 new BasicObject() { Id = 1, Name = "One" },
                 new BasicObject() { Id = 2, Name = "Two" },
@@ -130,7 +130,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void SortedList() {
+        public void SortedListIsClonedIndependently() {
             SortedList<int, string> orig = new SortedList<int, string> {
                 { 3, "Three" },
                 { 1, "One" },
@@ -145,7 +145,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void SortedListValues() {
+        public void UnfillableSortedListValuesKeepsReference() {
             SortedList<int, string> orig = new SortedList<int, string> {
                 { 3, "Three" },
                 { 1, "One" },
@@ -161,7 +161,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ListAsIEnumerable() {
+        public void ProjectedIEnumerableKeepsReference() {
             List<BasicObject> orig = new List<BasicObject>() {
                 new BasicObject() { Id = 1, Name = "One" },
                 new BasicObject() { Id = 2, Name = "Two" },

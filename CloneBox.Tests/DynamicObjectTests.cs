@@ -9,7 +9,7 @@ namespace CloneBox.Tests {
     public class DynamicObjectTests {
 
         [Fact]
-        public void CopySimpleDynamic() {
+        public void ExpandoObjectCopiesSimpleMembers() {
             dynamic dyn = new ExpandoObject();
             dyn.Id = 1;
             dyn.Value = "Test1";
@@ -70,7 +70,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyComplexDynamic() {
+        public void ExpandoObjectDeepClonesNestedPoco() {
             dynamic dyn = new ExpandoObject();
             dyn.Id = 1;
             dyn.Complex = ComplexClass.CreateTestObject();
@@ -95,7 +95,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyDynamicMultipleNested() {
+        public void NestedExpandoObjectsAreDeepCloned() {
             dynamic dyn = new ExpandoObject();
             dyn.Level1 = new ExpandoObject();
             dyn.Level1.Text = "Level1";
@@ -134,7 +134,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyBasicDynamicIntoPoco() {
+        public void CloneXToCopiesExpandoIntoPoco() {
             dynamic dyn = new ExpandoObject();
             dyn.Id = 1;
             dyn.Value = "Test1";
@@ -161,7 +161,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyDynamicIntoComplexPoco() {
+        public void CloneXToCopiesNestedExpandoIntoPoco() {
             dynamic dyn = new ExpandoObject();
             dyn.DateTime = new DateTime(2022, 2, 2);
             dyn.List = new List<POCO>() {
@@ -202,7 +202,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyPocoIntoDynamic() {
+        public void CloneXToCopiesPocoIntoExpando() {
             POCO poco = new POCO() {
                 Id = 1,
                 Value = "Test1",
@@ -220,7 +220,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyComplexPocoIntoDynamic() {
+        public void CloneXToCopiesNestedPocoIntoExpando() {
             var poco = new COMPLEXPOCO();
             poco.DateTime = new DateTime(2022, 2, 2);
             poco.List = new List<POCO>() {

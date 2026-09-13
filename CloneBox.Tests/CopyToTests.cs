@@ -16,7 +16,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void SimpleCopyTo() {
+        public void CloneXToOverwritesMatchingMembers() {
             var cFrom = new BASE {
                 A = 12,
                 B = "testestest",
@@ -47,7 +47,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyChildProperties() {
+        public void CloneXToFromBasePreservesDerivedExtraMembers() {
             var cFrom = new BASE {
                 A = 12,
                 B = "testestest",
@@ -76,7 +76,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassWithSubclass() {
+        public void CloneXToCopiesSharedNestedReferences() {
             var baseObj = new BASE { A = 12 };
             var cFrom = new BASECONTAINER { Base1 = baseObj, Base2 = baseObj };
             var cTarget = new BASECONTAINER();
@@ -90,14 +90,14 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyToNull() {
+        public void CloneXToNullDestinationReturnsNull() {
             var baseObj = new BASE();
             var nullclone = baseObj.CloneXTo((BASE)null);
             nullclone.Should().BeNull();
         }
 
         [Fact]
-        public void CopyFromNull() {
+        public void CloneXToThrowsWhenSourceIsNull() {
             BASE baseObj = null;
             Assert.Throws<InvalidOperationException>(() => {
                 baseObj.CloneXTo(new BASE());
@@ -105,7 +105,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CloneFromNull() {
+        public void CloneXOfNullReturnsNull() {
             BASE baseObj = null;
             baseObj.CloneX().Should().BeNull();
         }
@@ -114,7 +114,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void DifferentInheritance() {
+        public void CloneXToFromDerivedTypedAsBaseCopiesMembers() {
             BASE baseObj = new BASECHILD {
                 A = 12,
                 B = "testestest",
@@ -161,7 +161,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void StructAsInterface() {
+        public void CloneXToStructThroughInterface() {
             S1 sFrom = new S1 { A = 42 };
             S1 sTo = new S1();
             var objTo = (I1)sTo;
@@ -173,7 +173,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void StringIntoString() {
+        public void CloneXToStringReturnsSourceValue() {
             var s1 = "abc";
             var s2 = "def";
             var s3 = s1.CloneXTo(s2);
@@ -183,7 +183,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ArraySameSize() {
+        public void CloneXToArrayOfSameLengthOverwritesItems() {
             var arrFrom = new[] { 1, 2, 3 };
             var arrTo = new[] { 4, 5, 6 };
             arrFrom.CloneXTo(arrTo);
@@ -194,7 +194,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void BigArrayIntoSmallerArray() {
+        public void CloneXToCopiesOverlappingArrayItems() {
             var arrFrom = new[] { 1, 2, 3 };
             var arrTo = new[] { 4, 5 };
             arrFrom.CloneXTo(arrTo);
@@ -204,7 +204,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void SmallArrayIntoBiggerArray() {
+        public void CloneXToLeavesExtraTargetArrayItems() {
             var arrFrom = new[] { 1, 2 };
             var arrTo = new[] { 4, 5, 6 };
             arrFrom.CloneXTo(arrTo);
@@ -215,7 +215,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectArray() {
+        public void CloneXToObjectArrayKeepsSharedReferences() {
             var baseObj = new BASECHILD();
             var cont = new BASECONTAINER { Base1 = baseObj, Base2 = baseObj };
             var arrFrom = new[] { cont, cont, cont };
@@ -231,7 +231,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NonZeroBasedArray() {
+        public void CloneXToNonZeroBasedArrayCopiesOverlappingBounds() {
             var arrFrom = Array.CreateInstance(typeof(int), new[] { 2 }, new[] { 1 });
             var arrTo = Array.CreateInstance(typeof(int), new[] { 2 }, new[] { 0 });
             arrFrom.SetValue(1, 1);
@@ -243,7 +243,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void MultiDimArray() {
+        public void CloneXToMultiDimArrayCopiesMatchingIndices() {
             var arrFrom = Array.CreateInstance(typeof(int), new[] { 2, 2 }, new[] { 1, 1 });
             var arrTo = Array.CreateInstance(typeof(int), new[] { 2, 2 }, new[] { 1, 1 });
             arrFrom.SetValue(1, 1, 1);
@@ -255,7 +255,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void TwoDimArray() {
+        public void CloneXToTwoDimArrayCopiesOverlappingCells() {
             var arrFrom = new[,] { { 1, 2 }, { 3, 4 } };
             var arrTo = new int[3, 1];
             arrFrom.CloneXTo(arrTo);
@@ -266,7 +266,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void DictionaryIntoOther() {
+        public void CloneXToDictionaryCopiesEntriesIndependently() {
             var dsource = new Dictionary<string, string> { { "A", "B" }, { "C", "D" } };
             var dtarget = new Dictionary<string, string>();
             dsource.CloneXTo(dtarget);
@@ -292,7 +292,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void UsingThisKeywordAsTarget() {
+        public void CloneXToWorksWhenTargetIsThis() {
             var baseObject = new D1 { A = 12 };
             var wrapper = new D2(baseObject);
             wrapper.A.Should().Be(12);

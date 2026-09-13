@@ -46,7 +46,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ShallowBasicObject() {
+        public void PocoWithPrivateFieldsIsValueEqualAfterClone() {
             var original = new BasicObject {
                 BoolValue = true,
                 ByteValue = 0x10,
@@ -65,7 +65,7 @@ namespace CloneBox.Tests {
         [InlineData("bool")]
         [InlineData("byte")]
         [InlineData("int")]
-        public void WithDataModification(string modificationType) {
+        public void MutatingCloneDoesNotChangeOriginal(string modificationType) {
             var original = new BasicObject {
                 BoolValue = true,
                 ByteValue = 0x10,
@@ -100,7 +100,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ShallowSimpleObject() {
+        public void CloneKeepsOriginalValuesAfterSourceMutation() {
             //Arrange
             var singlePoco = new SimpleObject(1, "Test1");
 

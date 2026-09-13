@@ -20,7 +20,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void AttributeOnPropertiesAndFields() {
+        public void DoNotCloneAttributeSkipsMarkedMembers() {
 
             CheckIgnoreAttribute orig = new CheckIgnoreAttribute() {
                 Prop1 = "1",
@@ -56,7 +56,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void AttributeOnClass() {
+        public void DoNotCloneAttributeOnClassSkipsValues() {
 
             DoNotCloneContainer orig = new DoNotCloneContainer() {
                 Prop = new DoNotCloneClass() { Name = "A" },
@@ -95,7 +95,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void UsingPredicates() {
+        public void DoNotClonePredicatesSkipMatchingMembers() {
 
             CheckIgnorePredicates orig = new CheckIgnorePredicates() {
                 Prop1 = "1",

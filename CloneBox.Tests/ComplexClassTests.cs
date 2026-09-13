@@ -183,7 +183,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CloneComplexClass() {
+        public void ComplexPocoWithManyMemberTypesIsDeepCloned() {
             var orig = new ComplexObject(100);
             var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);
@@ -429,7 +429,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CloneInvoiceSourceObject() {
+        public void NestedInvoiceGraphIsDeepCloned() {
             var availSource = new InvoiceSource() {
                 Identifier = "TestAvailSource",
                 InvoiceGroups = new[] {
@@ -610,7 +610,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void CopyComplexObject() {
+        public void NestedListsArraysAndDictionaryAreDeepCloned() {
             var orig = ComplexClass.CreateTestObject();
 
             var clone = orig.CloneX();

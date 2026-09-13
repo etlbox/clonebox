@@ -14,7 +14,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClonerShouldNotCallAnyMethodOfClonableClass() {
+        public void ICloneableCloneIsNotCalledByDefault() {
             // just for check, ensure no hidden behaviour in MemberwiseClone            
             var orig = new CLONEABLECLASS();
             var orig2 = new { X = new CLONEABLECLASS() };
@@ -36,7 +36,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectWithPrivateConstructor() {
+        public void PrivateConstructorIsUsedWhenNeeded() {
             var orig = PRIVATECONST.Create();
             orig.Value = 42;
             var clone = orig.CloneX();
@@ -54,7 +54,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectWithComplexConstructor() {
+        public void ParameterizedConstructorIsUsedWithDefaults() {
             var orig = new COMPLEXCONSTR(1, "A", PRIVATECONST.Create());
             orig.Value = 42;
             var clone = orig.CloneX();
@@ -66,7 +66,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void AnonymousObject() {
+        public void AnonymousTypeIsCloned() {
             var orig = new { A = 1, B = "x", C = PRIVATECONST.Create() };
             orig.C.Value = 42;
             var clone = orig.CloneX();
@@ -81,7 +81,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void ContextBound_Object_Should_Be_Cloned() {
+        public void ContextBoundObjectIsCloned() {
             // FormatterServices.CreateUninitializedObject cannot use context-bound objects
             var orig = new CONTEXTBOUNDOBJ();
             var clone = orig.CloneX();
@@ -94,7 +94,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void MarshalByRef_Object_Should_Be_Cloned() {
+        public void MarshalByRefObjectIsCloned() {
             var orig = new MARSHALOBJ();
             var clone = orig.CloneX();
             clone.Should().NotBeNull();
@@ -128,7 +128,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClonerShouldNotCallAnyMethodOfClass() {
+        public void EqualsToStringAndThrowingCtorAreNotInvoked() {
             var orig = new ExClass("x");
             var clone = orig.CloneX();
             clone.Should().NotBeNull();
@@ -162,7 +162,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectWithMultipleConstructors() {
+        public void FirstViableConstructorIsUsed() {
             var orig = new MULTIPLECONST(1, "A", new CLONEABLECLASS());
             orig.Value = 42;
             var clone = orig.CloneX();
@@ -173,7 +173,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void OnlyPublicConstructor() {
+        public void PrivateConstructorIsSkippedWhenDisabled() {
 
             var orig = PRIVATECONST.Create();
             orig.Value = 42;

@@ -17,14 +17,14 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void SimpleStruct() {
+        public void StructCopiesPublicFields() {
             var s1 = new S1 { A = 1 };
             var cloned = s1.CloneX();
             cloned.A.Should().Be(1);
         }
 
         [Fact]
-        public void StructWithChild() {
+        public void NestedStructCopiesInnerFields() {
             var s1 = new S2 { S = new S3 { B = true } };
             var cloned = s1.CloneX();
             cloned.S.B.Should().Be(true);
@@ -40,7 +40,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void StructWithClass() {
+        public void StructDeepClonesClassField() {
             var c1 = new S4();
             c1.F = 1;
             c1.C = new C2();
@@ -96,7 +96,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectWithReadonlyStruct() {
+        public void ClassWithReadonlyStructFieldsIsCloned() {
             var c = new C6();
             var clone = c.CloneX();
             clone.Should().NotBeSameAs(c);

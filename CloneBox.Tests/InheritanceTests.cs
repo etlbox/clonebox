@@ -32,7 +32,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void CopyingRealInstance() {
+        public void HiddenNewPropertyIsCopiedOnRuntimeType() {
             var newChildOrig = new NEWCHILD();
             newChildOrig.X = 2;
             var baseObjOrig = newChildOrig as BASEOBJ;
@@ -72,7 +72,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ParentPropertyCloning() {
+        public void DerivedClassCopiesBaseAndOwnProperties() {
             var childOrig = new CHILD();
             childOrig.Y = 2;
             childOrig.X = 1;
@@ -83,7 +83,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void IgnoreCastingToParent() {
+        public void CloneUsesRuntimeTypeWhenCastToBase() {
             var childOrig = new CHILD();
             childOrig.Y = 2;
             childOrig.X = 1;
@@ -100,7 +100,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void DeepCopyOfClass() {
+        public void SharedReferencesInClassArePreserved() {
             var containerOrig = new CONTAINER();
             var baseObjOrig = new BASEOBJ { X = 1 };
             containerOrig.A = baseObjOrig;
@@ -113,7 +113,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void DeepCopyOfStruct() {
+        public void SharedReferencesInStructArePreserved() {
             var structOrig = new STRUCT();
             var baseObjOrig = new BASEOBJ { X = 1 };
             structOrig.A = baseObjOrig;
@@ -126,7 +126,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void DeepCopyOfArray() {
+        public void SharedReferencesInArrayArePreserved() {
             var child1 = new CHILD { X = 1, Y = 2 };
             var child2 = new CHILD { X = 1, Y = 3 };
             var arrayOrig = new[] { child1, child2, child1 };
@@ -161,7 +161,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void StructCastedToInterface() {
+        public void StructBoxedAsInterfaceUsesRuntimeType() {
             var s = new STRUCTINTERFACE();
             s.X = new CLASSINTERFACE() { X = 3 };
             var orig = s as IDisposable;
@@ -175,7 +175,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassCastedToInterface() {
+        public void ClassCastToInterfaceUsesRuntimeType() {
             var bo = new CLASSINTERFACE() { X = 3, O = new STRUCTINTERFACE() };
             var orig = bo as IDisposable;
             var clone = orig.CloneX();
@@ -186,7 +186,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassCastedToObject() {
+        public void ClassCastToObjectUsesRuntimeType() {
             var bo = new BASEOBJ() { X = 3 };
             var orig = bo as object;
             var clone = orig.CloneX();
@@ -197,7 +197,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ArrayOfCastedInterfaces() {
+        public void InterfaceArrayKeepsRuntimeTypesAndSharing() {
             var c1 = new CLASSINTERFACE() { X = 1 };
             var c2 = new CLASSINTERFACE() { X = 2 };
             var orig = new IDisposable[] { c1, c2, c1 };
@@ -224,7 +224,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassWithVirtualProps() {
+        public void OverriddenVirtualPropertiesAreCopied() {
             var v2 = new VirtualClass2();
             v2.A = 1;
             v2.B = 2;

@@ -11,7 +11,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ReferenceLoop() {
+        public void TwoNodeCycleKeepsIdentities() {
             var loop1 = new LOOP() { Id = 1 };
             var loop2 = new LOOP() { Id = 2 };
             loop1.SelfRef = loop2;
@@ -27,7 +27,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NestedLoop() {
+        public void SelfReferencePointsToClone() {
             var loop = new LOOP() { Id = 1 };
             loop.SelfRef = loop;
             var clone = loop.CloneX();

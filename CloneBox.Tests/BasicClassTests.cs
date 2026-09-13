@@ -11,7 +11,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CloneNullables() {
+        public void NullablePropertiesAreCopied() {
             var c = new ClassWithNullable { B = 42 };
             var cloned = c.CloneX();
             cloned.A.Should().BeNull();
@@ -28,7 +28,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void ClassWithObject() {
+        public void NestedObjectIsDeepCloned() {
             var c1 = new C1();
             c1.C = new C2();
             var cloned = c1.CloneX();
@@ -46,7 +46,7 @@ namespace CloneBox.Tests {
         public class EmptyClass { }
 
         [Fact]
-        public void CloningEmptyClass() {
+        public void EmptyClassYieldsNewInstance() {
             var orig = new EmptyClass();
             var clone = orig.CloneX();
             clone.Should().NotBeNull();
@@ -65,7 +65,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void IgnoreReadonlyFields() {
+        public void ClassWithReadonlyFieldIsCloned() {
             var orig = new Readonly1("Z");
             var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);

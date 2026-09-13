@@ -6,7 +6,7 @@ namespace CloneBox.Tests {
     public class MultiDimArrayTests {
 
         [Fact]
-        public void TwoDimArray() {
+        public void TwoDimIntArrayIsClonedIndependently() {
             var orig = new int[2, 2];
             orig[0, 0] = 1;
             orig[0, 1] = 2;
@@ -22,7 +22,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ThreeDimArrayWithNullable() {
+        public void ThreeDimNullableArrayKeepsNulls() {
             var orig = new int?[2, 2, 1];
             orig[0, 0, 0] = 1;
             orig[0, 1, 0] = 2;
@@ -38,7 +38,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ThreeDimArray() {
+        public void ThreeDimIntArrayCopiesAllCells() {
             const int cnt1 = 4;
             const int cnt2 = 5;
             const int cnt3 = 6;
@@ -64,7 +64,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void TwoDimWithClass() {
+        public void TwoDimClassArraySharesRepeatedReferences() {
             var orig = new ARROBJ[2, 2];
             var rec1 = new ARROBJ();
             var rec2 = new ARROBJ() { A = new[] { 1, 2 }, B = new[] { 2 } };
@@ -88,7 +88,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void NonZeroBased() {
+        public void NonZeroBasedArrayKeepsBoundsAndValues() {
             var orig = Array.CreateInstance(typeof(int), new[] { 2 }, new[] { 1 });
             orig.SetValue(1, 1);
             orig.SetValue(2, 2);
@@ -98,7 +98,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NonZeroBased2Dimensions() {
+        public void NonZeroBasedTwoDimArrayKeepsBoundsAndValues() {
             var orig = Array.CreateInstance(typeof(string), new[] { 2, 3 }, new[] { 1, 2 });
             orig.SetValue("A", 1, 2);
             orig.SetValue("B", 1, 3);
@@ -114,7 +114,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NonZeroBased3Dimensions() {
+        public void NonZeroBasedThreeDimArrayKeepsBoundsAndValues() {
             var orig = Array.CreateInstance(typeof(string), new[] { 2, 3, 2 }, new[] { 1, 2, 1 });
             orig.SetValue("A", new[] { 1, 2, 1 });
             orig.SetValue("B", new[] { 1, 3, 1 });

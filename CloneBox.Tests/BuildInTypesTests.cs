@@ -112,7 +112,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CLRDataTypesTests() {
+        public void BuiltInNumericAndCharMembersAreCopied() {
             var original = BuildInDataTypes.CreateTestObject();
             var cloned = original.CloneX();
 
@@ -134,7 +134,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void SpecialTypesTests() {
+        public void DateTimeGuidEnumAndPointersAreCopied() {
             var orig = new SpecialTypes {
                 DateTime = new DateTime(2001, 01, 01),
                 DateTimeOffset = new DateTime(2001, 01, 01).ToUniversalTime(),
@@ -157,7 +157,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void PrimitiveClones() {
+        public void StandalonePrimitivesAndNullAreCopied() {
             3.CloneX().Should().Be(3);
             'x'.CloneX().Should().Be('x');
             "xxxxxxxxxx yyyyyyyyyyyyyy".CloneX().Should().Be("xxxxxxxxxx yyyyyyyyyyyyyy");
@@ -175,7 +175,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void StringBuilderClone() {
+        public void StringBuilderCopiesContentIndependently() {
             var orig = new StringBuilder();
             orig.Append("test1");
             var clone = orig.CloneX();
@@ -184,7 +184,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void ActionClone() {
+        public void ActionCloneUsesIndependentClosure() {
             var closure = new[] { "123" };
             Action<int> orig = (n) => {
                 closure[0].Should().Be("123");
@@ -200,7 +200,7 @@ namespace CloneBox.Tests {
 
         //https://stackoverflow.com/questions/22151871/deep-copying-a-func-within-an-object-in-c-sharp
         [Fact]
-        public void FuncsClone() {
+        public void FuncCloneUsesIndependentClosure() {
             var closure = new[] { "123" };
             Func<int, string> orig = x => closure[0] + x.ToString(CultureInfo.InvariantCulture);
             var clone = orig.CloneX();
@@ -225,7 +225,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void EventsClone() {
+        public void EventHandlersAreCopiedIndependently() {
             var orig = new EventHandlerTest1();
             var summ = new int[1];
             Action<int> a1 = x => summ[0] += x;
@@ -245,7 +245,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void DbNullClone() {
+        public void DbNullRemainsDbNull() {
             //DBNull must be created as a value type
             var orig = DBNull.Value;
             var clone = orig.CloneX();

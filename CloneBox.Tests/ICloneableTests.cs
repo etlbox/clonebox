@@ -27,7 +27,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ImplementingICloneable() {
+        public void UseICloneableCallsCloneOnImplementation() {
             var orig = new CloneableClass();
 
             var clone = orig.CloneX(new CloneSettings() {
@@ -40,7 +40,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ListOfICloneable() {
+        public void ListOfICloneableUsesCloneAndKeepsSharing() {
             var elementA = new CloneableClass() { Id = 1, Value = "A" };
             var elementB = new CloneableClass() { Id = 3, Value = "C" };
             var orig = new List<CloneableClass>() {
@@ -64,7 +64,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CloneableContainerClass() {
+        public void SharedICloneableMembersStaySharedAfterClone() {
             var orig = new CloneableClass();
             var container = new CloneableContainer() {
                 CloneableA = orig,

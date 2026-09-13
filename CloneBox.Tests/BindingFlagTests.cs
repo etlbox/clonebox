@@ -25,7 +25,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void TestPropsAndFieldsSimple() {
+        public void PublicAndPrivateMembersAreCopiedByDefault() {
             DifferentAccessModifiers orig = new DifferentAccessModifiers();
             var clone = orig.CloneX();
             clone.Should().NotBeSameAs(orig);
@@ -131,7 +131,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void DefaultBindingFlags() {
+        public void DefaultSettingsCopyAllInstanceMembers() {
             var orig = new ModifierTest();
             orig.SetValues();
             var clone = orig.CloneX();
@@ -141,7 +141,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void PublicOnlyBindingFlags() {
+        public void PublicOnlySettingsSkipNonPublicMembers() {
             var orig = new ModifierTest();
             orig.SetValues();
             var clone = orig.CloneX(new CloneSettings() {
@@ -153,7 +153,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void OnlyPublicProperties() {
+        public void PublicPropertiesOnlySettingsSkipFields() {
             var orig = new ModifierTest();
             orig.SetValues();
             var clone = orig.CloneX(new CloneSettings() {

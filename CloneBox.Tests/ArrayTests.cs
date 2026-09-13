@@ -9,7 +9,7 @@ namespace CloneBox.Tests {
     public class ArrayTests {
 
         [Fact]
-        public void IntegerArray() {
+        public void IntegerArrayIsClonedIndependently() {
             var origArr = new[] { 1, 2, 3, 2, 0, 1 };
             var clonedArr = origArr.CloneX();
             clonedArr.Should().HaveCount(6);
@@ -18,7 +18,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NullableIntegerArray() {
+        public void NullableIntegerArrayKeepsNulls() {
             var origArr = new int?[] { 1, 2, null, 3, 2, null, 0, 1 };
             var clonedArr = origArr.CloneX();
             clonedArr.Should().HaveCount(8);
@@ -27,7 +27,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void StringArray() {
+        public void StringArrayIsClonedIndependently() {
             var origArr = new[] { "1", "2", "3", null, "", "1", "3", null };
             var clonedArr = origArr.CloneX();
             clonedArr.Should().HaveCount(8);
@@ -36,7 +36,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void StringArrayCastedAsObject() {
+        public void StringArrayBoxedAsObjectUsesRuntimeType() {
             // checking that cached object correctly clones arrays of different length
             var origArr = (object)new[] { "1", "2", "3", null, "555", "1" };
             var clonedArr = origArr.CloneX() as string[];
@@ -46,7 +46,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ByteArray() {
+        public void ByteArrayIsClonedIndependently() {
             // checking that cached object correctly clones arrays of different length
             var origArr = Encoding.ASCII.GetBytes("test test test");
             var clonedArr = origArr.CloneX();
@@ -60,7 +60,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassArray() {
+        public void ClassArrayDeepClonesAndSharesRepeatedReferences() {
             var obj1 = new OBJ { X = 1, Y = "1" };
             var obj2 = new OBJ { X = 2, Y = "2" };
             var origArr = new[] { obj1, obj2, null, obj1 };
@@ -87,7 +87,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassWithConstructorArray() {
+        public void ArrayOfClassesWithConstructorIsDeepCloned() {
             var origArr = new[] { new OBJCON(1, "1"), new OBJCON(2, "2"), null, new OBJCON(1, "3") };
             var clonedArr = origArr.CloneX();
             clonedArr.Should().HaveCount(4);
@@ -110,7 +110,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void StructArray() {
+        public void StructArrayDeepClonesNestedObjects() {
             var rec1 = new STRUCT() { X = "1", Y = 1, OBJCON = new OBJCON(1, "1") };
             var rec2 = new STRUCT() { X = "2", Y = 2, OBJCON = new OBJCON(2, "2") };
             var origArr = new STRUCT[] { rec1, rec2, rec1, rec2 };
@@ -145,7 +145,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void StructArrayWithConstructor() {
+        public void ArrayOfStructsWithConstructorIsDeepCloned() {
             var srec1 = new STRUCT() { X = "1", Y = 1, OBJCON = new OBJCON(1, "1") };
             var srec2 = new STRUCT() { X = "2", Y = 2, OBJCON = new OBJCON(2, "2") };
             var rec1 = new STRUCTCON(new string[] { "A" }, new STRUCT[] { srec1, srec2 });
@@ -169,7 +169,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NullArray() {
+        public void ArrayOfNullsStaysNulls() {
             var origArr = new OBJ[] { null, null };
             var clonedArr = origArr.CloneX();
             clonedArr.Should().HaveCount(2);
@@ -178,7 +178,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void NullAsArray() {
+        public void NullArrayCloneIsNull() {
             var origArr = (int[])null;
             var clonedArr = origArr.CloneX();
             clonedArr.Should().BeNull();
@@ -186,7 +186,7 @@ namespace CloneBox.Tests {
 
 
         [Fact]
-        public void ArrayOfSameArrays() {
+        public void RepeatedInnerArraysShareIdentityInClone() {
             var rec1 = new int?[] { 1, null, 3 };
             var origArr = new[] { rec1, rec1, rec1, rec1 };
             var clonedArr = origArr.CloneX();
@@ -210,7 +210,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ArrayOfSameClass() {
+        public void ClassArrayPropertiesAreDeepCloned() {
             var orig = new ARROBJ();
             orig.A = new int[] { 1, 2, 3 };
             orig.B = new int?[] { 1, null, 3 };
@@ -225,7 +225,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ClassWithNullArrays() {
+        public void NullArrayPropertiesStayNull() {
             var orig = new ARROBJ();
             var clone = orig.CloneX();
 
@@ -235,7 +235,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ArrayAsNonGenericArray() {
+        public void NonGenericArrayUsesRuntimeType() {
             var arr = new[] { 1, 2, 3 };
             var genArr = (Array)arr;
             var clone = (int[])genArr.CloneX();
@@ -247,7 +247,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ArrayAsIEnumerable() {
+        public void ArrayTypedAsIEnumerableUsesRuntimeType() {
             var arr = new[] { 1, 2, 3 };
             var genArr = (IEnumerable<int>)arr;
             var clone = (int[])genArr.CloneX();
@@ -265,7 +265,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CharArrayInClass() {
+        public void CharArrayPropertyIsCopied() {
             var orig = new CHARARRAY() {
                 CharArr = new[] { 'T', 'e', 's', 't' }
             };
@@ -287,7 +287,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CopyObjectArray() {
+        public void ObjectArrayKeepsMixedRuntimeTypes() {
             var orig = new object[] { "Test1", new TestClass(1, "Test1"), new DateTime(2022, 1, 1) };
             var clone = orig.CloneX();
             orig.Should().NotBeSameAs(clone);

@@ -12,7 +12,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void EnsureCloningOfCrossReference() {
+        public void CrossReferencedObjectsAreDeepCloned() {
             var aOrig = new A();
             var bOrig = new B();
             aOrig.RefToB = bOrig;
@@ -28,7 +28,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void EnsureCloningOfSelfReference() {
+        public void SelfReferencePointsToClone() {
             var cOrig = new C();
             cOrig.Child = cOrig;
 

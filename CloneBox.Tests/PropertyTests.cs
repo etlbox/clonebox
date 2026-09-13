@@ -23,7 +23,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void CharsInDict() {
+        public void IntegerIndexerValuesAreCopiedViaBackingStore() {
             var orig = new IndexedProperty();
             orig[0] = 'T';
             orig[1] = 's';
@@ -54,7 +54,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void PropsWithException() {
+        public void PropertySetterExceptionIsSwallowed() {
             var orig = new PropertyThrows();
             orig.InitProps();
             var clone = orig.CloneX(new CloneSettings() {

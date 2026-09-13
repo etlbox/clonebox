@@ -13,7 +13,7 @@ namespace CloneBox.Tests {
 
         }
         [Fact]
-        public void BasicTests() {
+        public void CreateInstanceSupportsPrimitivesCollectionsAndPoco() {
             CloneXExtensions.CreateInstance<int?>().Should().BeNull();
             CloneXExtensions.CreateInstance<int>().Should().Be(0);
             CloneXExtensions.CreateInstance<string>().Should().Be("");
@@ -26,7 +26,7 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
-        public void ObjectTests() {
+        public void CreatedPocoHasDefaultValuesAndIsMutable() {
             var o = CloneXExtensions.CreateInstance<OBJ>();
             o.Id.Should().Be(0);
             o.Value.Should().BeNull();
