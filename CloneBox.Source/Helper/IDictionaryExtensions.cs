@@ -15,11 +15,5 @@ namespace CloneBox {
             }
             return dict;
         }
-
-        public static void TryAdd<T>(this ICollection<T> collection, T item) {
-            if (!collection.Contains(item))
-                collection.Add(item);
-        }
-
     }
 }

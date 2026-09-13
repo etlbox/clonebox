@@ -3,7 +3,6 @@
 namespace CloneBox {
     public static class CloneXExtensions {
 
-
         public static T CloneX<T>(this T sourceObject)
             => CloneXTo<T, T>(sourceObject, new CloneSettings());
 

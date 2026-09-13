@@ -8,49 +8,29 @@ using System.Reflection;
 
 namespace CloneBox {
     internal static class CloneRuntime {
-        private static readonly MethodInfo CloneItemMethod = typeof(CloneRuntime).GetMethod(nameof(CloneItem));
-        private static readonly MethodInfo RegisterMethod = typeof(CloneRuntime).GetMethod(nameof(Register));
-        private static readonly MethodInfo CreateInstanceMethod = typeof(CloneRuntime).GetMethod(nameof(CreateInstance));
-        private static readonly MethodInfo TrySetPropertyMethod = typeof(CloneRuntime).GetMethod(nameof(TrySetProperty));
-        private static readonly MethodInfo TrySetFieldMethod = typeof(CloneRuntime).GetMethod(nameof(TrySetField));
-        private static readonly MethodInfo CopyPointerFieldMethod = typeof(CloneRuntime).GetMethod(nameof(CopyPointerField));
-        private static readonly MethodInfo ShouldSkipPropertyMethod = typeof(CloneRuntime).GetMethod(nameof(ShouldSkipProperty));
-        private static readonly MethodInfo ShouldSkipFieldMethod = typeof(CloneRuntime).GetMethod(nameof(ShouldSkipField));
-        private static readonly MethodInfo ShouldSkipClassMethod = typeof(CloneRuntime).GetMethod(nameof(ShouldSkipClass));
-        private static readonly MethodInfo GetDynamicValueMethod = typeof(CloneRuntime).GetMethod(nameof(GetDynamicValue));
-        private static readonly MethodInfo FillEnumerableMethod = typeof(CloneRuntime).GetMethod(nameof(FillEnumerable));
-        private static readonly MethodInfo FillDictionaryMethod = typeof(CloneRuntime).GetMethod(nameof(FillDictionary));
-        private static readonly MethodInfo FillDynamicDictionaryMethod = typeof(CloneRuntime).GetMethod(nameof(FillDynamicDictionary));
-        private static readonly MethodInfo FillArrayMethod = typeof(CloneRuntime).GetMethod(nameof(FillArray));
-        private static readonly MethodInfo CloneIndexedPropertyMethod = typeof(CloneRuntime).GetMethod(nameof(CloneIndexedProperty));
-        private static readonly MethodInfo CopyCollectionPropertiesMethod = typeof(CloneRuntime).GetMethod(nameof(CopyCollectionProperties));
-        private static readonly MethodInfo CreateExceptionMethod = typeof(CloneRuntime).GetMethod(nameof(CreateException));
-        private static readonly MethodInfo CopyReadOnlyCollectionMethod = typeof(CloneRuntime).GetMethod(nameof(CopyReadOnlyCollection));
-        private static readonly MethodInfo CopyReadOnlyDictionaryMethod = typeof(CloneRuntime).GetMethod(nameof(CopyReadOnlyDictionary));
-        private static readonly MethodInfo CopyBitArrayMethod = typeof(CloneRuntime).GetMethod(nameof(CopyBitArray));
-        private static readonly MethodInfo CopyNameValueCollectionMethod = typeof(CloneRuntime).GetMethod(nameof(CopyNameValueCollection));
+        public static readonly MethodInfo CloneItemInfo = Method(nameof(CloneItem));
+        public static readonly MethodInfo RegisterInfo = Method(nameof(Register));
+        public static readonly MethodInfo CreateInstanceInfo = Method(nameof(CreateInstance));
+        public static readonly MethodInfo TrySetPropertyInfo = Method(nameof(TrySetProperty));
+        public static readonly MethodInfo TrySetFieldInfo = Method(nameof(TrySetField));
+        public static readonly MethodInfo CopyPointerFieldInfo = Method(nameof(CopyPointerField));
+        public static readonly MethodInfo ShouldSkipPropertyInfo = Method(nameof(ShouldSkipProperty));
+        public static readonly MethodInfo ShouldSkipFieldInfo = Method(nameof(ShouldSkipField));
+        public static readonly MethodInfo ShouldSkipClassInfo = Method(nameof(ShouldSkipClass));
+        public static readonly MethodInfo GetDynamicValueInfo = Method(nameof(GetDynamicValue));
+        public static readonly MethodInfo FillEnumerableInfo = Method(nameof(FillEnumerable));
+        public static readonly MethodInfo FillDictionaryInfo = Method(nameof(FillDictionary));
+        public static readonly MethodInfo FillDynamicDictionaryInfo = Method(nameof(FillDynamicDictionary));
+        public static readonly MethodInfo FillArrayInfo = Method(nameof(FillArray));
+        public static readonly MethodInfo CloneIndexedPropertyInfo = Method(nameof(CloneIndexedProperty));
+        public static readonly MethodInfo CopyCollectionPropertiesInfo = Method(nameof(CopyCollectionProperties));
+        public static readonly MethodInfo CreateExceptionInfo = Method(nameof(CreateException));
+        public static readonly MethodInfo CopyReadOnlyCollectionInfo = Method(nameof(CopyReadOnlyCollection));
+        public static readonly MethodInfo CopyReadOnlyDictionaryInfo = Method(nameof(CopyReadOnlyDictionary));
+        public static readonly MethodInfo CopyBitArrayInfo = Method(nameof(CopyBitArray));
+        public static readonly MethodInfo CopyNameValueCollectionInfo = Method(nameof(CopyNameValueCollection));
 
-        public static MethodInfo CloneItemInfo => CloneItemMethod;
-        public static MethodInfo RegisterInfo => RegisterMethod;
-        public static MethodInfo CreateInstanceInfo => CreateInstanceMethod;
-        public static MethodInfo TrySetPropertyInfo => TrySetPropertyMethod;
-        public static MethodInfo TrySetFieldInfo => TrySetFieldMethod;
-        public static MethodInfo CopyPointerFieldInfo => CopyPointerFieldMethod;
-        public static MethodInfo ShouldSkipPropertyInfo => ShouldSkipPropertyMethod;
-        public static MethodInfo ShouldSkipFieldInfo => ShouldSkipFieldMethod;
-        public static MethodInfo ShouldSkipClassInfo => ShouldSkipClassMethod;
-        public static MethodInfo GetDynamicValueInfo => GetDynamicValueMethod;
-        public static MethodInfo FillEnumerableInfo => FillEnumerableMethod;
-        public static MethodInfo FillDictionaryInfo => FillDictionaryMethod;
-        public static MethodInfo FillDynamicDictionaryInfo => FillDynamicDictionaryMethod;
-        public static MethodInfo FillArrayInfo => FillArrayMethod;
-        public static MethodInfo CloneIndexedPropertyInfo => CloneIndexedPropertyMethod;
-        public static MethodInfo CopyCollectionPropertiesInfo => CopyCollectionPropertiesMethod;
-        public static MethodInfo CreateExceptionInfo => CreateExceptionMethod;
-        public static MethodInfo CopyReadOnlyCollectionInfo => CopyReadOnlyCollectionMethod;
-        public static MethodInfo CopyReadOnlyDictionaryInfo => CopyReadOnlyDictionaryMethod;
-        public static MethodInfo CopyBitArrayInfo => CopyBitArrayMethod;
-        public static MethodInfo CopyNameValueCollectionInfo => CopyNameValueCollectionMethod;
+        private static MethodInfo Method(string name) => typeof(CloneRuntime).GetMethod(name);
 
         public static object CloneItem(object item, CloneProvider provider) => provider.CloneInternal(item);
 
@@ -64,31 +44,32 @@ namespace CloneBox {
 
         public static object CreateException(object source, CloneProvider provider) {
             var exception = (Exception)source;
+            var type = exception.GetType();
             var inner = exception.InnerException == null
                 ? null
                 : (Exception)provider.CloneInternal(exception.InnerException);
+
+            return TryCreate(type, exception.Message, inner)
+                ?? TryCreate(type, exception.Message)
+                ?? provider.InstanceCreator.CreateInstance(type, source);
+        }
+
+        private static object TryCreate(Type type, params object[] args) {
             try {
-                return Activator.CreateInstance(exception.GetType(), exception.Message, inner);
+                return Activator.CreateInstance(type, args);
             } catch {
-                try {
-                    return Activator.CreateInstance(exception.GetType(), exception.Message);
-                } catch {
-                    return provider.InstanceCreator.CreateInstance(exception.GetType(), source);
-                }
+                return null;
             }
         }
 
-        public static bool ShouldSkipClass(Type type, CloneProvider provider) {
-            return provider.CloneSettings.DoNotCloneClassInternal(type);
-        }
+        public static bool ShouldSkipClass(Type type, CloneProvider provider)
+            => provider.CloneSettings.DoNotCloneClassInternal(type);
 
-        public static bool ShouldSkipProperty(PropertyInfo property, CloneProvider provider) {
-            return provider.CloneSettings.DoNotClonePropertyInternal(property);
-        }
+        public static bool ShouldSkipProperty(PropertyInfo property, CloneProvider provider)
+            => provider.CloneSettings.DoNotClonePropertyInternal(property);
 
-        public static bool ShouldSkipField(FieldInfo field, CloneProvider provider) {
-            return provider.CloneSettings.DoNotCloneFieldInternal(field);
-        }
+        public static bool ShouldSkipField(FieldInfo field, CloneProvider provider)
+            => provider.CloneSettings.DoNotCloneFieldInternal(field);
 
         public static void TrySetProperty(PropertyInfo property, object target, object value) {
             try {
@@ -129,7 +110,7 @@ namespace CloneBox {
 
         public static object FillEnumerable(object source, object target, Type targetType, CloneProvider provider) {
             var enumerable = (IEnumerable)source;
-            if (!HasEntries(source, targetType, enumerable))
+            if (!HasEntries(enumerable, targetType))
                 return target;
             try {
                 MethodInfo addMethod = targetType.DetermineAddMethod();
@@ -168,35 +149,29 @@ namespace CloneBox {
             return target;
         }
 
-        public static object CopyReadOnlyCollection(object source, object target, CloneProvider provider) {
+        public static object CopyReadOnlyCollection(object source, CloneProvider provider) {
             var type = source.GetType();
             var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(type.GetGenericArguments()[0]));
             foreach (var item in (IEnumerable)source)
                 list.Add(provider.CloneInternal(item));
-            var clone = Activator.CreateInstance(type, list);
-            provider.ExistingClones[source] = clone;
-            return clone;
+            return Registered(source, Activator.CreateInstance(type, list), provider);
         }
 
-        public static object CopyReadOnlyDictionary(object source, object target, CloneProvider provider) {
+        public static object CopyReadOnlyDictionary(object source, CloneProvider provider) {
             var type = source.GetType();
             var args = type.GetGenericArguments();
             var dictionary = (IDictionary)Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(args[0], args[1]));
             var sourceDictionary = (IDictionary)source;
             foreach (var key in sourceDictionary.Keys)
                 dictionary.Add(key, provider.CloneInternal(sourceDictionary[key]));
-            var clone = Activator.CreateInstance(type, dictionary);
-            provider.ExistingClones[source] = clone;
-            return clone;
+            return Registered(source, Activator.CreateInstance(type, dictionary), provider);
         }
 
-        public static object CopyBitArray(object source, object target, CloneProvider provider) {
-            var clone = new BitArray((BitArray)source);
-            provider.ExistingClones[source] = clone;
-            return clone;
+        public static object CopyBitArray(object source, CloneProvider provider) {
+            return Registered(source, new BitArray((BitArray)source), provider);
         }
 
-        public static object CopyNameValueCollection(object source, object target, CloneProvider provider) {
+        public static object CopyNameValueCollection(object source, CloneProvider provider) {
             var sourceCollection = (NameValueCollection)source;
             var clone = new NameValueCollection();
             foreach (var key in sourceCollection.AllKeys) {
@@ -207,23 +182,29 @@ namespace CloneBox {
                     foreach (var value in values)
                         clone.Add(key, value);
             }
+            return Registered(source, clone, provider);
+        }
+
+        private static object Registered(object source, object clone, CloneProvider provider) {
             provider.ExistingClones[source] = clone;
             return clone;
         }
 
         public static object FillDictionary(object source, object target, CloneProvider provider) {
-            var targetDict = target as IDictionary;
-            var sourceDict = source as IDictionary;
+            if (!(target is IDictionary targetDict))
+                return target;
+            var sourceDict = (IDictionary)source;
             foreach (var key in sourceDict.Keys)
-                targetDict?.Add(key, provider.CloneInternal(sourceDict[key]));
+                targetDict.Add(key, provider.CloneInternal(sourceDict[key]));
             return targetDict;
         }
 
         public static object FillDynamicDictionary(object source, object target, CloneProvider provider) {
-            var targetDict = target as IDictionary<string, object>;
+            if (!(target is IDictionary<string, object> targetDict))
+                return target;
             var sourceDict = source.ToDictionary();
             foreach (var key in sourceDict.Keys)
-                targetDict?.Add(key, provider.CloneInternal(sourceDict[key]));
+                targetDict.Add(key, provider.CloneInternal(sourceDict[key]));
             return targetDict;
         }
 
@@ -235,8 +216,14 @@ namespace CloneBox {
 
         public static T[] CopyReferenceArray<T>(T[] source, T[] target, CloneProvider provider) {
             var length = Math.Min(source.Length, target.Length);
+            if (typeof(T).IsValueType) {
+                for (int i = 0; i < length; i++)
+                    target[i] = (T)provider.CloneInternal(source[i]);
+                return target;
+            }
+            Func<object, CloneProvider, object> cloner = null;
             for (int i = 0; i < length; i++)
-                target[i] = (T)provider.CloneInternal(source[i]);
+                target[i] = CloneKnown(source[i], provider, ref cloner);
             return target;
         }
 
@@ -245,44 +232,74 @@ namespace CloneBox {
                 return target;
             if (target.Capacity < source.Count)
                 target.Capacity = source.Count;
+            if (typeof(T).IsRealPrimitive()) {
+                target.AddRange(source);
+                return target;
+            }
+            if (typeof(T).IsValueType) {
+                for (int i = 0; i < source.Count; i++)
+                    target.Add((T)provider.CloneInternal(source[i]));
+                return target;
+            }
+            Func<object, CloneProvider, object> cloner = null;
             for (int i = 0; i < source.Count; i++)
-                target.Add((T)provider.CloneInternal(source[i]));
+                target.Add(CloneKnown(source[i], provider, ref cloner));
             return target;
         }
 
         public static Dictionary<TKey, TValue> CopyGenericDictionary<TKey, TValue>(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target, CloneProvider provider) {
+            if (typeof(TValue).IsRealPrimitive()) {
+                foreach (var pair in source)
+                    target.Add(pair.Key, pair.Value);
+                return target;
+            }
+            if (typeof(TValue).IsValueType) {
+                foreach (var pair in source)
+                    target.Add(pair.Key, (TValue)provider.CloneInternal(pair.Value));
+                return target;
+            }
+            Func<object, CloneProvider, object> cloner = null;
             foreach (var pair in source)
-                target.Add(pair.Key, (TValue)provider.CloneInternal(pair.Value));
+                target.Add(pair.Key, CloneKnown(pair.Value, provider, ref cloner));
             return target;
         }
 
+        private static T CloneKnown<T>(T item, CloneProvider provider, ref Func<object, CloneProvider, object> cloner) {
+            if (item == null)
+                return default;
+            if (provider.ExistingClones.TryGetValue(item, out var existing))
+                return (T)existing;
+            if (provider.CloneSettings.UseICloneableClone || item.GetType() != typeof(T))
+                return (T)provider.CloneInternal(item);
+            if (cloner == null)
+                cloner = ExpressionCloner.GetCloner(typeof(T), provider.CloneSettings);
+            return (T)cloner(item, provider);
+        }
+
         public static object FillArray(object source, object target, CloneProvider provider) {
-            var targetArray = target as Array;
-            var sourceArray = source as Array;
-            if (sourceArray == null)
+            var targetArray = (Array)target;
+            if (!(source is Array sourceArray))
                 return FillArrayFromEnumerable(source, targetArray, provider);
-            int[] indices = new int[targetArray.Rank];
-            SetValues(targetArray, 0);
+
+            var indices = new int[targetArray.Rank];
+            SetValues(0);
             return targetArray;
 
-            void SetValues(Array array, int dimension) {
-                if (dimension == array.Rank) {
-                    if (IsWithinSourceArrayBounds(sourceArray, indices)) {
-                        var clonedValue = provider.CloneInternal(sourceArray.GetValue(indices));
-                        array.SetValue(clonedValue, indices);
-                    }
+            void SetValues(int dimension) {
+                if (dimension == targetArray.Rank) {
+                    if (IsWithinSourceBounds())
+                        targetArray.SetValue(provider.CloneInternal(sourceArray.GetValue(indices)), indices);
                     return;
                 }
-
-                for (int i = array.GetLowerBound(dimension); i <= array.GetUpperBound(dimension); i++) {
+                for (int i = targetArray.GetLowerBound(dimension); i <= targetArray.GetUpperBound(dimension); i++) {
                     indices[dimension] = i;
-                    SetValues(array, dimension + 1);
+                    SetValues(dimension + 1);
                 }
             }
 
-            bool IsWithinSourceArrayBounds(Array sourceArray, int[] currentIndices) {
+            bool IsWithinSourceBounds() {
                 for (int dim = 0; dim < sourceArray.Rank; dim++) {
-                    if (currentIndices[dim] < sourceArray.GetLowerBound(dim) || currentIndices[dim] > sourceArray.GetUpperBound(dim))
+                    if (indices[dim] < sourceArray.GetLowerBound(dim) || indices[dim] > sourceArray.GetUpperBound(dim))
                         return false;
                 }
                 return true;
@@ -310,10 +327,10 @@ namespace CloneBox {
             return targetArray;
         }
 
-        private static bool HasEntries(object source, Type targetType, IEnumerable enumerable) {
-            if (typeof(ICollection).IsAssignableFrom(targetType))
-                return ((ICollection)source).Count > 0;
-            return enumerable.Cast<object>().Any();
+        private static bool HasEntries(IEnumerable source, Type targetType) {
+            if (source is ICollection collection && typeof(ICollection).IsAssignableFrom(targetType))
+                return collection.Count > 0;
+            return source.Cast<object>().Any();
         }
     }
 }

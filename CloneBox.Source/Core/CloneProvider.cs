@@ -5,20 +5,13 @@ namespace CloneBox {
 
     internal class CloneProvider {
 
-        internal CloneSettings CloneSettings { get; set; }
-        internal Dictionary<object, object> ExistingClones = new Dictionary<object, object>();
-        internal InstanceCreator InstanceCreator;
+        internal CloneSettings CloneSettings { get; }
+        internal readonly Dictionary<object, object> ExistingClones = new Dictionary<object, object>(ReferenceComparer.Instance);
+        internal readonly InstanceCreator InstanceCreator;
 
         public CloneProvider(CloneSettings cloneSettings) {
-            if (cloneSettings == null) cloneSettings = new CloneSettings();
-            Init(cloneSettings);
-        }
-
-        public void Init(CloneSettings cloneSettings) {
-            CloneSettings = cloneSettings;
-            InstanceCreator = new InstanceCreator() {
-                CloneSettings = CloneSettings
-            };
+            CloneSettings = cloneSettings ?? new CloneSettings();
+            InstanceCreator = new InstanceCreator { CloneSettings = CloneSettings };
         }
 
         internal object CloneInternal(object sourceObject) {

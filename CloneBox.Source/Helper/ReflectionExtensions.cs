@@ -6,20 +6,30 @@ using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace CloneBox {
     internal static class ReflectionExtensions {
         public static bool IsRealPrimitive(this Type type) {
             if (type == null) return false;
-            return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(DateTime) || type == typeof(TimeSpan) || type == typeof(Guid) || type == typeof(DBNull);
+            if (type.IsPrimitive || type.IsEnum) return true;
+            if (type == typeof(string) || type == typeof(decimal) || type == typeof(DateTime)
+                || type == typeof(DateTimeOffset) || type == typeof(TimeSpan) || type == typeof(Guid)
+                || type == typeof(DBNull))
+                return true;
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return type.GetGenericArguments()[0].IsRealPrimitive();
+            return false;
         }
 
         public static bool IsIdentityClone(this Type type) {
-            if (type == null) return false;
-            if (typeof(MemberInfo).IsAssignableFrom(type)) return true;
-            if (typeof(Assembly).IsAssignableFrom(type)) return true;
-            if (typeof(Module).IsAssignableFrom(type)) return true;
-            return type.Namespace == "System.Collections.Frozen";
+            var ns = type?.Namespace;
+            if (ns == null) return false;
+            if (ns == "System.Collections.Frozen") return true;
+            if (ns != "System" && !ns.StartsWith("System.Reflection", StringComparison.Ordinal)) return false;
+            return typeof(MemberInfo).IsAssignableFrom(type)
+                || typeof(Assembly).IsAssignableFrom(type)
+                || typeof(Module).IsAssignableFrom(type);
         }
 
         public static bool IsReadOnlyCollection(this Type type)
@@ -32,11 +42,9 @@ namespace CloneBox {
 
         public static bool IsNameValueCollection(this Type type) => type == typeof(NameValueCollection);
 
-        public static bool IsDynamic(this Type type, object obj)
-            => (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) && (obj == null || obj is IDictionary<string, object>));
-
-        public static bool IsArray(this Type type, object obj)
-          => (type.IsArray && (obj == null || obj is Array));
+        public static bool IsDynamicDictionary(this Type type)
+            => typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type)
+               && typeof(IDictionary<string, object>).IsAssignableFrom(type);
 
         public static bool IsIEnumerable(this Type type)
             => typeof(IEnumerable).IsAssignableFrom(type) && type != typeof(string);
@@ -66,12 +74,15 @@ namespace CloneBox {
                 .FirstOrDefault(m => m.Name == name && m.GetParameters().Length == 1);
         }
 
-        //See also: https://stackoverflow.com/questions/8817070/is-it-possible-to-access-backing-fields-behind-auto-implemented-properties
-        //Will likely work only in c#
-        internal static string GetBackingFieldName(PropFieldInfo prop) {
-            return string.Format("<{0}>k__BackingField", prop.Name);
-        }
+        internal static string GetBackingFieldName(string propertyName)
+            => "<" + propertyName + ">k__BackingField";
+    }
 
+    internal sealed class ReferenceComparer : IEqualityComparer<object> {
+        public static readonly ReferenceComparer Instance = new ReferenceComparer();
 
+        bool IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+
+        int IEqualityComparer<object>.GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
     }
 }

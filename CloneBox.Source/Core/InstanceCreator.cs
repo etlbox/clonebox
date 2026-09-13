@@ -7,19 +7,16 @@ namespace CloneBox {
     internal class InstanceCreator {
 
         public CloneSettings CloneSettings { get; set; } = new CloneSettings();
-        public object CreateInstance(Type type, object sourceObject = null) {
-            object newInstance = null;
-            if (type == null) return null;
-            if (type.IsArray(sourceObject)) {
-                newInstance = CreateArrayInstance(type, sourceObject);
-            } else if (sourceObject != null && sourceObject is Delegate) {
-                return (sourceObject as Delegate).Clone();
-            } else {
-                newInstance = CreateObjectInstance(type, sourceObject);
-            }
-            return newInstance;
-        }
 
+        public object CreateInstance(Type type, object sourceObject = null) {
+            if (type == null)
+                return null;
+            if (type.IsArray)
+                return CreateArrayInstance(type, sourceObject);
+            if (sourceObject is Delegate del)
+                return del.Clone();
+            return CreateObjectInstance(type, sourceObject);
+        }
 
         private object CreateObjectInstance(Type type, object sourceObject = null) {
             var withComparer = TryCreateCollectionWithComparer(type, sourceObject);
@@ -30,28 +27,23 @@ namespace CloneBox {
                 return special;
             if (type.IsValueType)
                 return Activator.CreateInstance(type);
-            bool hasDefaultConstructor = type.GetConstructor(Type.EmptyTypes) != null;
-            try {
-                if (hasDefaultConstructor)
-                    return Activator.CreateInstance(type);
 
+            try {
+                if (type.GetConstructor(Type.EmptyTypes) != null)
+                    return Activator.CreateInstance(type);
             } catch {
                 CloneSettings.Logger?.LogDebug("No default constructor found for '{typeName}' - trying to use other constructors using default values.", type.Name);
             }
 
             var bindingFlags = CloneSettings.ConstructorBindings;
-            var constructors = type.GetConstructors(bindingFlags);
-            foreach (var constructor in constructors) {
+            foreach (var constructor in type.GetConstructors(bindingFlags)) {
                 try {
-                    var parameters = constructor.GetParameters();
-                    var param = new List<object>();
-                    foreach (var p in parameters)
-                        param.Add(CreateInstance(p.ParameterType));
-                    var newList = Activator.CreateInstance(type, bindingAttr: bindingFlags, binder: null, args: param.ToArray(), culture: null);
-                    return newList;
+                    var args = new List<object>();
+                    foreach (var parameter in constructor.GetParameters())
+                        args.Add(CreateInstance(parameter.ParameterType));
+                    return Activator.CreateInstance(type, bindingAttr: bindingFlags, binder: null, args: args.ToArray(), culture: null);
                 } catch {
-                    CloneSettings.Logger?.LogDebug("Constructor {rank} for type '{typeName}' failed using default values as parameter", constructors.Rank, type.Name);
-
+                    CloneSettings.Logger?.LogDebug("Constructor for type '{typeName}' failed using default values as parameter", type.Name);
                 }
             }
             if (!CloneSettings.IncludeNonPublicConstructors)
@@ -65,7 +57,6 @@ namespace CloneBox {
             } catch {
                 return null;
             }
-
         }
 
         private static object TryCreateCollectionWithComparer(Type type, object sourceObject) {
@@ -98,32 +89,18 @@ namespace CloneBox {
             return null;
         }
 
-        class ArrayDimensions {
-            public List<int> Lengths { get; set; } = new List<int>();
-            public List<int> LowerBounds { get; set; } = new List<int>();
+        private static object CreateArrayInstance(Type type, object sourceObject = null) {
+            var sourceArray = sourceObject as Array;
+            if (sourceArray == null || sourceArray.Rank == 0)
+                return Array.CreateInstance(type.GetElementType(), new int[type.GetArrayRank()]);
 
-        }
-
-        private object CreateArrayInstance(Type type, object sourceObject = null) {
-            Array sourceArray = sourceObject as Array;
-            if (sourceArray == null || sourceArray.Rank == 0) return Create0Array(type);
-            ArrayDimensions dimensions = DetermineArrayDimensions(sourceArray);
-            return Array.CreateInstance(type.GetElementType(), dimensions.Lengths.ToArray(), dimensions.LowerBounds.ToArray());
-
-            object Create0Array(Type type) {
-                var lengths = new int[type.GetArrayRank()];
-                return Array.CreateInstance(type.GetElementType(), lengths);
+            var lengths = new int[sourceArray.Rank];
+            var lowerBounds = new int[sourceArray.Rank];
+            for (var dimension = 0; dimension < sourceArray.Rank; dimension++) {
+                lengths[dimension] = sourceArray.GetLength(dimension);
+                lowerBounds[dimension] = sourceArray.GetLowerBound(dimension);
             }
-
-            ArrayDimensions DetermineArrayDimensions(Array sourceArray) {
-                var arrayDimensions = new ArrayDimensions();
-                for (var dimension = 0; dimension < sourceArray.Rank; dimension++) {
-                    arrayDimensions.Lengths.Add(sourceArray.GetLength(dimension));
-                    arrayDimensions.LowerBounds.Add(sourceArray.GetLowerBound(dimension));
-                }
-                return arrayDimensions;
-            }
+            return Array.CreateInstance(type.GetElementType(), lengths, lowerBounds);
         }
     }
 }
-

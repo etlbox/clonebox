@@ -14,11 +14,17 @@ namespace CloneBox {
             new ConcurrentDictionary<CopierKey, Func<object, object, CloneProvider, object>>();
 
         public static Func<object, CloneProvider, object> GetCloner(Type type, CloneSettings settings) {
-            return Cloners.GetOrAdd(new ClonerKey(type, settings), key => CompileCloner(key.Type, settings));
+            var key = new ClonerKey(type, settings);
+            if (Cloners.TryGetValue(key, out var cloner))
+                return cloner;
+            return Cloners.GetOrAdd(key, CompileCloner(type, settings));
         }
 
         public static Func<object, object, CloneProvider, object> GetCopier(Type sourceType, Type targetType, CloneSettings settings) {
-            return Copiers.GetOrAdd(new CopierKey(sourceType, targetType, settings), key => CompileCopier(key.SourceType, key.TargetType, settings));
+            var key = new CopierKey(sourceType, targetType, settings);
+            if (Copiers.TryGetValue(key, out var copier))
+                return copier;
+            return Copiers.GetOrAdd(key, CompileCopier(sourceType, targetType, settings));
         }
 
         private static Func<object, CloneProvider, object> CompileCloner(Type type, CloneSettings settings) {
@@ -26,21 +32,12 @@ namespace CloneBox {
             var providerParam = Expression.Parameter(typeof(CloneProvider), "provider");
             var targetVar = Expression.Variable(typeof(object), "target");
 
-            Expression afterCreate = Expression.Block(
-                typeof(object),
-                Expression.Call(CloneRuntime.RegisterInfo, sourceParam, targetVar, providerParam),
-                BuildCopyBody(type, type, sourceParam, targetVar, providerParam, settings)
-            );
+            Expression copy = BuildCopyBody(type, type, sourceParam, targetVar, providerParam, settings);
             if (settings.DoNotCloneClass != null || type.GetCustomAttribute<DoNotClone>() != null) {
-                afterCreate = Expression.Block(
-                    typeof(object),
-                    Expression.Call(CloneRuntime.RegisterInfo, sourceParam, targetVar, providerParam),
-                    Expression.Condition(
-                        Expression.Call(CloneRuntime.ShouldSkipClassInfo, Expression.Constant(type), providerParam),
-                        Expression.Constant(null, typeof(object)),
-                        BuildCopyBody(type, type, sourceParam, targetVar, providerParam, settings)
-                    )
-                );
+                copy = Expression.Condition(
+                    Expression.Call(CloneRuntime.ShouldSkipClassInfo, Expression.Constant(type), providerParam),
+                    Expression.Constant(null, typeof(object)),
+                    copy);
             }
 
             var block = Expression.Block(
@@ -50,7 +47,10 @@ namespace CloneBox {
                 Expression.Condition(
                     Expression.Equal(targetVar, Expression.Constant(null)),
                     Expression.Constant(null, typeof(object)),
-                    afterCreate
+                    Expression.Block(
+                        typeof(object),
+                        Expression.Call(CloneRuntime.RegisterInfo, sourceParam, targetVar, providerParam),
+                        copy)
                 )
             );
 
@@ -59,10 +59,10 @@ namespace CloneBox {
 
         private static Expression BuildCreateInstance(Type type, Expression source, Expression provider, CloneSettings settings) {
             if (type.IsArray)
-                return Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider);
+                return BuildCreateArray(type, source, provider);
 
             if (typeof(Delegate).IsAssignableFrom(type))
-                return Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider);
+                return CallCreateInstance(type, source, provider);
 
             if (type.IsValueType)
                 return Expression.Convert(Expression.New(type), typeof(object));
@@ -70,27 +70,61 @@ namespace CloneBox {
             if (typeof(Exception).IsAssignableFrom(type))
                 return Expression.Call(CloneRuntime.CreateExceptionInfo, source, provider);
 
-            if (type.GetProperty("Comparer") != null)
-                return Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider);
+            var listCreate = TryCreateList(type, source);
+            if (listCreate != null)
+                return listCreate;
+
+            var comparerCreate = TryCreateWithComparer(type, source, provider);
+            if (comparerCreate != null)
+                return comparerCreate;
 
             var constructor = type.GetConstructor(settings.ConstructorBindings, null, Type.EmptyTypes, null);
-            if (constructor != null) {
-                var created = Expression.Variable(typeof(object), "created");
-                return Expression.Block(
-                    typeof(object),
-                    new[] { created },
-                    Expression.TryCatch(
-                        Expression.Assign(created, Expression.Convert(Expression.New(constructor), typeof(object))),
-                        Expression.Catch(
-                            typeof(Exception),
-                            Expression.Assign(created, Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider))
-                        )
-                    ),
-                    created
-                );
-            }
+            if (constructor != null)
+                return TryOrFallback(
+                    Expression.Convert(Expression.New(constructor), typeof(object)),
+                    CallCreateInstance(type, source, provider));
 
-            return Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider);
+            return CallCreateInstance(type, source, provider);
+        }
+
+        private static Expression BuildCreateArray(Type type, Expression source, Expression provider) {
+            var elementType = type.GetElementType();
+            if (elementType != null && type.GetArrayRank() == 1 && type == elementType.MakeArrayType()) {
+                var sourceArray = Expression.Convert(source, type);
+                return Expression.Convert(
+                    Expression.NewArrayBounds(elementType, Expression.ArrayLength(sourceArray)),
+                    typeof(object));
+            }
+            return CallCreateInstance(type, source, provider);
+        }
+
+        private static Expression TryCreateList(Type type, Expression source) {
+            if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(List<>))
+                return null;
+            var ctor = type.GetConstructor(new[] { typeof(int) });
+            var count = type.GetProperty("Count");
+            if (ctor == null || count == null)
+                return null;
+            var sourceList = Expression.Convert(source, type);
+            return Expression.Convert(
+                Expression.New(ctor, Expression.Property(sourceList, count)),
+                typeof(object));
+        }
+
+        private static Expression TryCreateWithComparer(Type type, Expression source, Expression provider) {
+            var comparerProp = type.GetProperty("Comparer");
+            if (comparerProp == null)
+                return null;
+            foreach (var ctor in type.GetConstructors()) {
+                var parameters = ctor.GetParameters();
+                if (parameters.Length == 1 && parameters[0].ParameterType.IsAssignableFrom(comparerProp.PropertyType)) {
+                    var created = Expression.Convert(
+                        Expression.New(ctor, Expression.Property(Expression.Convert(source, type), comparerProp)),
+                        typeof(object));
+                    return TryOrFallback(created, CallCreateInstance(type, source, provider));
+                }
+            }
+            return CallCreateInstance(type, source, provider);
         }
 
         private static Func<object, object, CloneProvider, object> CompileCopier(Type sourceType, Type targetType, CloneSettings settings) {
@@ -104,13 +138,13 @@ namespace CloneBox {
 
         private static Expression BuildCopyBody(Type sourceType, Type targetType, Expression source, Expression target, Expression provider, CloneSettings settings) {
             if (targetType.IsReadOnlyDictionary())
-                return Expression.Call(CloneRuntime.CopyReadOnlyDictionaryInfo, source, target, provider);
+                return Expression.Call(CloneRuntime.CopyReadOnlyDictionaryInfo, source, provider);
             if (targetType.IsReadOnlyCollection())
-                return Expression.Call(CloneRuntime.CopyReadOnlyCollectionInfo, source, target, provider);
+                return Expression.Call(CloneRuntime.CopyReadOnlyCollectionInfo, source, provider);
             if (targetType.IsBitArray())
-                return Expression.Call(CloneRuntime.CopyBitArrayInfo, source, target, provider);
+                return Expression.Call(CloneRuntime.CopyBitArrayInfo, source, provider);
             if (targetType.IsNameValueCollection())
-                return Expression.Call(CloneRuntime.CopyNameValueCollectionInfo, source, target, provider);
+                return Expression.Call(CloneRuntime.CopyNameValueCollectionInfo, source, provider);
             if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Dictionary<,>)) {
                 var args = targetType.GetGenericArguments();
                 var fill = typeof(CloneRuntime).GetMethod(nameof(CloneRuntime.CopyGenericDictionary)).MakeGenericMethod(args[0], args[1]);
@@ -123,7 +157,7 @@ namespace CloneBox {
             if (targetType.IsArray)
                 return BuildArrayCopy(sourceType, targetType, source, target, provider);
             if (targetType.IsIEnumerable())
-                return BuildEnumerableCopy(sourceType, targetType, source, target, provider);
+                return BuildEnumerableCopy(targetType, source, target, provider);
             return BuildMemberCopy(sourceType, targetType, source, target, provider, settings);
         }
 
@@ -140,17 +174,12 @@ namespace CloneBox {
             return Expression.Call(CloneRuntime.FillArrayInfo, source, target, provider);
         }
 
-        private static Expression BuildEnumerableCopy(Type sourceType, Type targetType, Expression source, Expression target, Expression provider) {
+        private static Expression BuildEnumerableCopy(Type targetType, Expression source, Expression target, Expression provider) {
             if (targetType.IsGenericType) {
                 var definition = targetType.GetGenericTypeDefinition();
                 if (definition == typeof(List<>)) {
                     var itemType = targetType.GetGenericArguments()[0];
                     var fill = typeof(CloneRuntime).GetMethod(nameof(CloneRuntime.CopyList)).MakeGenericMethod(itemType);
-                    return Expression.Call(fill, Expression.Convert(source, targetType), Expression.Convert(target, targetType), provider);
-                }
-                if (definition == typeof(Dictionary<,>)) {
-                    var args = targetType.GetGenericArguments();
-                    var fill = typeof(CloneRuntime).GetMethod(nameof(CloneRuntime.CopyGenericDictionary)).MakeGenericMethod(args[0], args[1]);
                     return Expression.Call(fill, Expression.Convert(source, targetType), Expression.Convert(target, targetType), provider);
                 }
             }
@@ -166,49 +195,28 @@ namespace CloneBox {
         private static Expression BuildMemberCopy(Type sourceType, Type targetType, Expression source, Expression target, Expression provider, CloneSettings settings) {
             var expressions = new List<Expression>();
             var variables = new List<ParameterExpression>();
-            Expression sourceTyped;
-            Expression targetTyped;
 
-            if (sourceType.IsValueType) {
-                sourceTyped = Expression.Unbox(source, sourceType);
-            } else {
-                var sourceVar = Expression.Variable(sourceType, "src");
-                variables.Add(sourceVar);
-                expressions.Add(Expression.Assign(sourceVar, Expression.Convert(source, sourceType)));
-                sourceTyped = sourceVar;
-            }
-
-            if (targetType.IsValueType) {
-                targetTyped = Expression.Unbox(target, targetType);
-            } else {
-                var targetVar = Expression.Variable(targetType, "tgt");
-                variables.Add(targetVar);
-                expressions.Add(Expression.Assign(targetVar, Expression.Convert(target, targetType)));
-                targetTyped = targetVar;
-            }
+            var sourceTyped = Localize(sourceType, source, "src", variables, expressions);
+            var targetTyped = Localize(targetType, target, "tgt", variables, expressions);
+            var context = new MemberCopyContext(sourceType, sourceTyped, targetTyped, source, target, provider, settings);
 
             var ignoreBackingFields = new HashSet<string>();
-            var sourceIsDynamic = typeof(System.Dynamic.IDynamicMetaObjectProvider).IsAssignableFrom(sourceType)
-                && typeof(IDictionary<string, object>).IsAssignableFrom(sourceType);
-            var hasPropertyPredicate = settings.DoNotCloneProperty != null;
-            var hasFieldPredicate = settings.DoNotCloneField != null;
-
             foreach (var prop in PropFieldInfo.GetAllProperties(targetType, settings)) {
-                if (prop.DoNotClone)
-                    ignoreBackingFields.Add(ReflectionExtensions.GetBackingFieldName(prop));
-                if (!prop.CanBeCloned || !prop.CanRead || !prop.CanWrite)
+                if (ShouldIgnoreBackingField(prop, settings))
+                    ignoreBackingFields.Add(ReflectionExtensions.GetBackingFieldName(prop.Name));
+                if (prop.DoNotClone || !prop.CanRead || !prop.CanWrite)
                     continue;
 
-                var copy = BuildPropertyCopy(prop, sourceType, sourceTyped, targetTyped, source, target, provider, sourceIsDynamic, hasPropertyPredicate, settings);
+                var copy = BuildPropertyCopy(prop, context);
                 if (copy != null)
                     expressions.Add(copy);
             }
 
             foreach (var field in PropFieldInfo.GetAllFields(targetType, settings)) {
-                if (!field.CanBeCloned || !field.CanRead || !field.CanWrite || ignoreBackingFields.Contains(field.Name))
+                if (field.DoNotClone || ignoreBackingFields.Contains(field.Name))
                     continue;
 
-                var copy = BuildFieldCopy(field, sourceType, sourceTyped, targetTyped, source, target, provider, sourceIsDynamic, hasFieldPredicate, settings);
+                var copy = BuildFieldCopy(field, context);
                 if (copy != null)
                     expressions.Add(copy);
             }
@@ -217,126 +225,71 @@ namespace CloneBox {
             return Expression.Block(typeof(object), variables, expressions);
         }
 
-        private static Expression BuildPropertyCopy(
-            PropFieldInfo targetProp,
-            Type sourceType,
-            Expression sourceTyped,
-            Expression targetTyped,
-            Expression sourceBoxed,
-            Expression targetBoxed,
-            Expression provider,
-            bool sourceIsDynamic,
-            bool hasPropertyPredicate,
-            CloneSettings settings) {
-
-            var indexParameters = targetProp.TryGetIndexedParameters();
-            if (indexParameters != null && indexParameters.Length > 0) {
-                var indexedSource = sourceType.GetProperty(targetProp.Name, settings.PropertyBindings);
-                if (indexedSource == null)
-                    return null;
-                Expression copy = Expression.Call(
-                    CloneRuntime.CloneIndexedPropertyInfo,
-                    sourceBoxed,
-                    targetBoxed,
-                    Expression.Constant(indexedSource),
-                    Expression.Constant(targetProp.PropInfo),
-                    provider);
-                return WrapPropertyPredicate(copy, targetProp.PropInfo, provider, hasPropertyPredicate);
-            }
-
-            if (sourceIsDynamic) {
-                var dynamicValue = Expression.Variable(typeof(object), "dynVal");
-                var clonedDynamic = Expression.Call(CloneRuntime.CloneItemInfo, dynamicValue, provider);
-                Expression setDynamic = Expression.Call(
-                    CloneRuntime.TrySetPropertyInfo,
-                    Expression.Constant(targetProp.PropInfo),
-                    targetBoxed,
-                    clonedDynamic);
-                var dynamicBlock = Expression.Block(
-                    typeof(void),
-                    new[] { dynamicValue },
-                    Expression.Assign(dynamicValue, Expression.Call(CloneRuntime.GetDynamicValueInfo, sourceBoxed, Expression.Constant(targetProp.Name))),
-                    Expression.IfThen(Expression.NotEqual(dynamicValue, Expression.Constant(null)), setDynamic)
-                );
-                return WrapPropertyPredicate(dynamicBlock, targetProp.PropInfo, provider, hasPropertyPredicate);
-            }
-
-            var sourceProp = sourceType.GetProperty(targetProp.Name, settings.PropertyBindings);
-            if (sourceProp == null)
-                return null;
-            var cloned = BuildClonedValue(Expression.Property(sourceTyped, sourceProp), sourceProp.PropertyType, targetProp.Type, provider);
-            Expression assign;
-            if (CanAssignProperty(targetProp.PropInfo)) {
-                assign = Expression.TryCatch(
-                    Expression.Block(typeof(void), Expression.Assign(Expression.Property(targetTyped, targetProp.PropInfo), cloned)),
-                    Expression.Catch(typeof(Exception), Expression.Empty())
-                );
-            } else {
-                assign = Expression.Call(
-                    CloneRuntime.TrySetPropertyInfo,
-                    Expression.Constant(targetProp.PropInfo),
-                    targetBoxed,
-                    Expression.Convert(cloned, typeof(object)));
-            }
-
-            return WrapPropertyPredicate(assign, targetProp.PropInfo, provider, hasPropertyPredicate);
+        private static Expression Localize(Type type, Expression boxed, string name, List<ParameterExpression> variables, List<Expression> expressions) {
+            if (type.IsValueType)
+                return Expression.Unbox(boxed, type);
+            var local = Expression.Variable(type, name);
+            variables.Add(local);
+            expressions.Add(Expression.Assign(local, Expression.Convert(boxed, type)));
+            return local;
         }
 
-        private static Expression BuildFieldCopy(
-            PropFieldInfo targetField,
-            Type sourceType,
-            Expression sourceTyped,
-            Expression targetTyped,
-            Expression sourceBoxed,
-            Expression targetBoxed,
-            Expression provider,
-            bool sourceIsDynamic,
-            bool hasFieldPredicate,
-            CloneSettings settings) {
-
-            if (sourceIsDynamic) {
-                var dynamicValue = Expression.Variable(typeof(object), "dynFieldVal");
-                var clonedDynamic = Expression.Call(CloneRuntime.CloneItemInfo, dynamicValue, provider);
-                var setDynamic = Expression.Call(
-                    CloneRuntime.TrySetFieldInfo,
-                    Expression.Constant(targetField.FieldInfo),
-                    targetBoxed,
-                    clonedDynamic);
-                var dynamicBlock = Expression.Block(
-                    typeof(void),
-                    new[] { dynamicValue },
-                    Expression.Assign(dynamicValue, Expression.Call(CloneRuntime.GetDynamicValueInfo, sourceBoxed, Expression.Constant(targetField.Name))),
-                    Expression.IfThen(Expression.NotEqual(dynamicValue, Expression.Constant(null)), setDynamic)
-                );
-                return WrapFieldPredicate(dynamicBlock, targetField.FieldInfo, provider, hasFieldPredicate);
+        private static Expression BuildPropertyCopy(PropFieldInfo targetProp, MemberCopyContext context) {
+            var property = targetProp.PropInfo;
+            if (targetProp.IsIndexer) {
+                var indexedSource = context.SourceType.GetProperty(targetProp.Name, context.Settings.PropertyBindings);
+                if (indexedSource == null)
+                    return null;
+                return context.UnlessPropertySkipped(
+                    Expression.Call(
+                        CloneRuntime.CloneIndexedPropertyInfo,
+                        context.SourceBoxed,
+                        context.TargetBoxed,
+                        Expression.Constant(indexedSource),
+                        Expression.Constant(property),
+                        context.Provider),
+                    property);
             }
 
-            var sourceField = sourceType.GetField(targetField.Name, settings.FieldBindings);
+            if (context.SourceIsDynamic)
+                return context.UnlessPropertySkipped(
+                    context.BuildDynamicCopy(targetProp.Name, CloneRuntime.TrySetPropertyInfo, property),
+                    property);
+
+            var sourceProp = context.SourceType.GetProperty(targetProp.Name, context.Settings.PropertyBindings);
+            if (sourceProp == null)
+                return null;
+
+            var cloned = BuildClonedValue(Expression.Property(context.SourceTyped, sourceProp), sourceProp.PropertyType, targetProp.Type, context.Provider);
+            Expression assign = CanAssignProperty(property)
+                ? AssignMember(Expression.Property(context.TargetTyped, property), cloned)
+                : Expression.Call(CloneRuntime.TrySetPropertyInfo, Expression.Constant(property), context.TargetBoxed, Expression.Convert(cloned, typeof(object)));
+
+            return context.UnlessPropertySkipped(assign, property);
+        }
+
+        private static Expression BuildFieldCopy(PropFieldInfo targetField, MemberCopyContext context) {
+            var field = targetField.FieldInfo;
+            if (context.SourceIsDynamic)
+                return context.UnlessFieldSkipped(
+                    context.BuildDynamicCopy(targetField.Name, CloneRuntime.TrySetFieldInfo, field),
+                    field);
+
+            var sourceField = context.SourceType.GetField(targetField.Name, context.Settings.FieldBindings);
             if (sourceField == null)
                 return null;
-            if (sourceField.FieldType.IsPointer || targetField.Type.IsPointer) {
-                return WrapFieldPredicate(
-                    Expression.Call(CloneRuntime.CopyPointerFieldInfo, Expression.Constant(targetField.FieldInfo), sourceBoxed, targetBoxed),
-                    targetField.FieldInfo,
-                    provider,
-                    hasFieldPredicate);
-            }
-            var cloned = BuildClonedValue(Expression.Field(sourceTyped, sourceField), sourceField.FieldType, targetField.Type, provider);
-            Expression assign;
-            if (targetField.FieldInfo.IsInitOnly || !targetField.FieldInfo.IsPublic) {
-                assign = Expression.Call(
-                    CloneRuntime.TrySetFieldInfo,
-                    Expression.Constant(targetField.FieldInfo),
-                    targetBoxed,
-                    Expression.Convert(cloned, typeof(object)));
-            } else {
-                assign = Expression.TryCatch(
-                    Expression.Block(typeof(void), Expression.Assign(Expression.Field(targetTyped, targetField.FieldInfo), cloned)),
-                    Expression.Catch(typeof(Exception), Expression.Empty())
-                );
-            }
 
-            return WrapFieldPredicate(assign, targetField.FieldInfo, provider, hasFieldPredicate);
+            if (sourceField.FieldType.IsPointer || targetField.Type.IsPointer)
+                return context.UnlessFieldSkipped(
+                    Expression.Call(CloneRuntime.CopyPointerFieldInfo, Expression.Constant(field), context.SourceBoxed, context.TargetBoxed),
+                    field);
+
+            var cloned = BuildClonedValue(Expression.Field(context.SourceTyped, sourceField), sourceField.FieldType, targetField.Type, context.Provider);
+            Expression assign = field.IsInitOnly || !field.IsPublic
+                ? Expression.Call(CloneRuntime.TrySetFieldInfo, Expression.Constant(field), context.TargetBoxed, Expression.Convert(cloned, typeof(object)))
+                : (Expression)AssignMember(Expression.Field(context.TargetTyped, field), cloned);
+
+            return context.UnlessFieldSkipped(assign, field);
         }
 
         private static Expression BuildClonedValue(Expression getValue, Type sourceValueType, Type targetValueType, Expression provider) {
@@ -348,33 +301,100 @@ namespace CloneBox {
                 return Expression.Convert(getValue, targetValueType);
             }
 
-            Expression boxed = getValue.Type.IsValueType ? Expression.Convert(getValue, typeof(object)) : Expression.Convert(getValue, typeof(object));
+            var boxed = getValue.Type == typeof(object) ? getValue : Expression.Convert(getValue, typeof(object));
             var cloned = Expression.Call(CloneRuntime.CloneItemInfo, boxed, provider);
             if (targetValueType == typeof(object))
                 return cloned;
-            if (targetValueType.IsValueType)
-                return Expression.Convert(cloned, targetValueType);
             return Expression.Convert(cloned, targetValueType);
+        }
+
+        private static bool ShouldIgnoreBackingField(PropFieldInfo prop, CloneSettings settings) {
+            if (prop.DoNotClone)
+                return true;
+            if (!prop.CanRead || !prop.CanWrite)
+                return false;
+            if (settings.DoNotCloneClass != null)
+                return false;
+            return prop.Type?.GetCustomAttribute<DoNotClone>() == null;
+        }
+
+        private static Expression AssignMember(Expression member, Expression value) {
+            return Expression.TryCatch(
+                Expression.Block(typeof(void), Expression.Assign(member, value)),
+                Expression.Catch(typeof(Exception), Expression.Empty())
+            );
         }
 
         private static bool CanAssignProperty(PropertyInfo property) {
             return property.CanWrite && property.GetIndexParameters().Length == 0 && property.SetMethod != null;
         }
 
-        private static Expression WrapPropertyPredicate(Expression body, PropertyInfo property, Expression provider, bool hasPredicate) {
-            if (!hasPredicate)
-                return body;
-            return Expression.IfThen(
-                Expression.Not(Expression.Call(CloneRuntime.ShouldSkipPropertyInfo, Expression.Constant(property), provider)),
-                body);
+        private static Expression CallCreateInstance(Type type, Expression source, Expression provider)
+            => Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider);
+
+        private static Expression TryOrFallback(Expression create, Expression fallback) {
+            var created = Expression.Variable(typeof(object), "created");
+            return Expression.Block(
+                typeof(object),
+                new[] { created },
+                Expression.TryCatch(
+                    Expression.Assign(created, create),
+                    Expression.Catch(typeof(Exception), Expression.Assign(created, fallback))
+                ),
+                created);
         }
 
-        private static Expression WrapFieldPredicate(Expression body, FieldInfo field, Expression provider, bool hasPredicate) {
-            if (!hasPredicate)
-                return body;
-            return Expression.IfThen(
-                Expression.Not(Expression.Call(CloneRuntime.ShouldSkipFieldInfo, Expression.Constant(field), provider)),
-                body);
+        private sealed class MemberCopyContext {
+            public readonly Type SourceType;
+            public readonly Expression SourceTyped;
+            public readonly Expression TargetTyped;
+            public readonly Expression SourceBoxed;
+            public readonly Expression TargetBoxed;
+            public readonly Expression Provider;
+            public readonly CloneSettings Settings;
+            public readonly bool SourceIsDynamic;
+
+            public MemberCopyContext(Type sourceType, Expression sourceTyped, Expression targetTyped,
+                Expression sourceBoxed, Expression targetBoxed, Expression provider, CloneSettings settings) {
+                SourceType = sourceType;
+                SourceTyped = sourceTyped;
+                TargetTyped = targetTyped;
+                SourceBoxed = sourceBoxed;
+                TargetBoxed = targetBoxed;
+                Provider = provider;
+                Settings = settings;
+                SourceIsDynamic = sourceType.IsDynamicDictionary();
+            }
+
+            public Expression UnlessPropertySkipped(Expression body, PropertyInfo property) {
+                if (Settings.DoNotCloneProperty == null)
+                    return body;
+                return Expression.IfThen(
+                    Expression.Not(Expression.Call(CloneRuntime.ShouldSkipPropertyInfo, Expression.Constant(property), Provider)),
+                    body);
+            }
+
+            public Expression UnlessFieldSkipped(Expression body, FieldInfo field) {
+                if (Settings.DoNotCloneField == null)
+                    return body;
+                return Expression.IfThen(
+                    Expression.Not(Expression.Call(CloneRuntime.ShouldSkipFieldInfo, Expression.Constant(field), Provider)),
+                    body);
+            }
+
+            public Expression BuildDynamicCopy(string name, MethodInfo setter, object member) {
+                var value = Expression.Variable(typeof(object), "dynVal");
+                var set = Expression.Call(
+                    setter,
+                    Expression.Constant(member),
+                    TargetBoxed,
+                    Expression.Call(CloneRuntime.CloneItemInfo, value, Provider));
+                return Expression.Block(
+                    typeof(void),
+                    new[] { value },
+                    Expression.Assign(value, Expression.Call(CloneRuntime.GetDynamicValueInfo, SourceBoxed, Expression.Constant(name))),
+                    Expression.IfThen(Expression.NotEqual(value, Expression.Constant(null)), set));
+            }
         }
     }
 }

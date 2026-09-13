@@ -31,23 +31,13 @@ namespace CloneBox {
 
         public ILogger Logger { get; set; }
 
+        internal bool DoNotCloneFieldInternal(FieldInfo fieldInfo)
+            => fieldInfo.GetCustomAttribute<DoNotClone>() != null || (DoNotCloneField?.Invoke(fieldInfo) ?? false);
 
-        internal bool DoNotCloneFieldInternal(FieldInfo fieldInfo) {
-            if (fieldInfo.GetCustomAttribute<DoNotClone>() != null)
-                return true;
-            return DoNotCloneField?.Invoke(fieldInfo) ?? false;
-        }
+        internal bool DoNotCloneClassInternal(Type type)
+            => type.GetCustomAttribute<DoNotClone>() != null || (DoNotCloneClass?.Invoke(type) ?? false);
 
-        internal bool DoNotCloneClassInternal(Type type) {
-            if (type.GetCustomAttribute<DoNotClone>() != null)
-                return true;
-            return DoNotCloneClass?.Invoke(type) ?? false;
-        }
-
-        internal bool DoNotClonePropertyInternal(PropertyInfo propInfo) {
-            if (propInfo.GetCustomAttribute<DoNotClone>() != null)
-                return true;
-            return DoNotCloneProperty?.Invoke(propInfo) ?? false;
-        }
+        internal bool DoNotClonePropertyInternal(PropertyInfo propInfo)
+            => propInfo.GetCustomAttribute<DoNotClone>() != null || (DoNotCloneProperty?.Invoke(propInfo) ?? false);
     }
 }
