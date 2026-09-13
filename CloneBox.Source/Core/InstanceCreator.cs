@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace CloneBox {
     internal class InstanceCreator {
@@ -14,13 +15,19 @@ namespace CloneBox {
             } else if (sourceObject != null && sourceObject is Delegate) {
                 return (sourceObject as Delegate).Clone();
             } else {
-                newInstance = CreateObjectInstance(type);
+                newInstance = CreateObjectInstance(type, sourceObject);
             }
             return newInstance;
         }
 
 
-        private object CreateObjectInstance(Type type) {
+        private object CreateObjectInstance(Type type, object sourceObject = null) {
+            var withComparer = TryCreateCollectionWithComparer(type, sourceObject);
+            if (withComparer != null)
+                return withComparer;
+            var special = TryCreateSpecialCollection(type);
+            if (special != null)
+                return special;
             if (type.IsValueType)
                 return Activator.CreateInstance(type);
             bool hasDefaultConstructor = type.GetConstructor(Type.EmptyTypes) != null;
@@ -47,8 +54,48 @@ namespace CloneBox {
 
                 }
             }
-            return null;
+            if (!CloneSettings.IncludeNonPublicConstructors)
+                return null;
+            try {
+#if NET
+                return System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type);
+#else
+                return FormatterServices.GetUninitializedObject(type);
+#endif
+            } catch {
+                return null;
+            }
 
+        }
+
+        private static object TryCreateCollectionWithComparer(Type type, object sourceObject) {
+            if (sourceObject == null || sourceObject.GetType() != type)
+                return null;
+            var comparerProperty = type.GetProperty("Comparer");
+            if (comparerProperty == null)
+                return null;
+            var comparer = comparerProperty.GetValue(sourceObject);
+            if (comparer == null)
+                return null;
+            foreach (var constructor in type.GetConstructors()) {
+                var parameters = constructor.GetParameters();
+                if (parameters.Length == 1 && parameters[0].ParameterType.IsInstanceOfType(comparer))
+                    return constructor.Invoke(new[] { comparer });
+            }
+            return null;
+        }
+
+        private static object TryCreateSpecialCollection(Type type) {
+            if (type.IsReadOnlyCollection()) {
+                var list = Activator.CreateInstance(typeof(List<>).MakeGenericType(type.GetGenericArguments()[0]));
+                return Activator.CreateInstance(type, list);
+            }
+            if (type.IsReadOnlyDictionary()) {
+                var args = type.GetGenericArguments();
+                var dictionary = Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(args[0], args[1]));
+                return Activator.CreateInstance(type, dictionary);
+            }
+            return null;
         }
 
         class ArrayDimensions {
@@ -64,7 +111,8 @@ namespace CloneBox {
             return Array.CreateInstance(type.GetElementType(), dimensions.Lengths.ToArray(), dimensions.LowerBounds.ToArray());
 
             object Create0Array(Type type) {
-                return Activator.CreateInstance(type, new object[] { 0 });
+                var lengths = new int[type.GetArrayRank()];
+                return Array.CreateInstance(type.GetElementType(), lengths);
             }
 
             ArrayDimensions DetermineArrayDimensions(Array sourceArray) {

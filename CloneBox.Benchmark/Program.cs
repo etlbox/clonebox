@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace CloneBox.Benchmark {
     internal class Program {
 
-        private const int TestObjects = 200;
+        private const int TestObjects = 2000;
 
         static void Main(string[] args) {
             var results = new Dictionary<string, TimeSpan>();

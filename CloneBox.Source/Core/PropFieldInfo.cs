@@ -51,14 +51,20 @@ namespace CloneBox {
         }
 
         public static IEnumerable<PropFieldInfo> GetAllFields(Type type, CloneSettings cloneSettings) {
-            return type
-                .GetFields(cloneSettings.FieldBindings)
-                .Select(
-                    fieldInfo => new PropFieldInfo(MemberType.Field) {
+            var fields = new List<PropFieldInfo>();
+            var names = new HashSet<string>();
+            var flags = cloneSettings.FieldBindings | BindingFlags.DeclaredOnly;
+            for (var current = type; current != null && current != typeof(object); current = current.BaseType) {
+                foreach (var fieldInfo in current.GetFields(flags)) {
+                    if (!names.Add(fieldInfo.Name))
+                        continue;
+                    fields.Add(new PropFieldInfo(MemberType.Field) {
                         FieldInfo = fieldInfo,
                         DoNotClone = cloneSettings.DoNotCloneFieldInternal(fieldInfo)
-                    }
-                );
+                    });
+                }
+            }
+            return fields;
         }
 
         public static PropFieldInfo MatchingPropField(MemberType memberType, object sourceObject, string propFieldName, CloneSettings cloneSettings) {
@@ -104,7 +110,7 @@ namespace CloneBox {
                     PropInfo.SetValue(obj, value);
                 else
                     FieldInfo.SetValue(obj, value);
-            } catch (Exception e) {
+            } catch (Exception) {
             }
         }
 

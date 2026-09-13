@@ -23,14 +23,15 @@ namespace CloneBox {
 
         internal object CloneInternal(object sourceObject) {
             if (sourceObject == null) return null;
-            if (sourceObject.GetType().IsRealPrimitive()) return sourceObject;
+            var type = sourceObject.GetType();
+            if (type.IsRealPrimitive() || type.IsIdentityClone()) return sourceObject;
             if (ExistingClones.TryGetValue(sourceObject, out var existing)) return existing;
             if (CloneSettings.UseICloneableClone && sourceObject is ICloneable && !(sourceObject is Delegate) && !(sourceObject is Array)) {
                 var iclone = ((ICloneable)sourceObject).Clone();
                 ExistingClones.Add(sourceObject, iclone);
                 return iclone;
             }
-            var cloner = ExpressionCloner.GetCloner(sourceObject.GetType(), CloneSettings);
+            var cloner = ExpressionCloner.GetCloner(type, CloneSettings);
             return cloner(sourceObject, this);
         }
 

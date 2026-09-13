@@ -67,6 +67,12 @@ namespace CloneBox {
             if (type.IsValueType)
                 return Expression.Convert(Expression.New(type), typeof(object));
 
+            if (typeof(Exception).IsAssignableFrom(type))
+                return Expression.Call(CloneRuntime.CreateExceptionInfo, source, provider);
+
+            if (type.GetProperty("Comparer") != null)
+                return Expression.Call(CloneRuntime.CreateInstanceInfo, Expression.Constant(type), source, provider);
+
             var constructor = type.GetConstructor(settings.ConstructorBindings, null, Type.EmptyTypes, null);
             if (constructor != null) {
                 var created = Expression.Variable(typeof(object), "created");
@@ -97,6 +103,14 @@ namespace CloneBox {
         }
 
         private static Expression BuildCopyBody(Type sourceType, Type targetType, Expression source, Expression target, Expression provider, CloneSettings settings) {
+            if (targetType.IsReadOnlyDictionary())
+                return Expression.Call(CloneRuntime.CopyReadOnlyDictionaryInfo, source, target, provider);
+            if (targetType.IsReadOnlyCollection())
+                return Expression.Call(CloneRuntime.CopyReadOnlyCollectionInfo, source, target, provider);
+            if (targetType.IsBitArray())
+                return Expression.Call(CloneRuntime.CopyBitArrayInfo, source, target, provider);
+            if (targetType.IsNameValueCollection())
+                return Expression.Call(CloneRuntime.CopyNameValueCollectionInfo, source, target, provider);
             if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Dictionary<,>)) {
                 var args = targetType.GetGenericArguments();
                 var fill = typeof(CloneRuntime).GetMethod(nameof(CloneRuntime.CopyGenericDictionary)).MakeGenericMethod(args[0], args[1]);
@@ -140,7 +154,13 @@ namespace CloneBox {
                     return Expression.Call(fill, Expression.Convert(source, targetType), Expression.Convert(target, targetType), provider);
                 }
             }
-            return Expression.Call(CloneRuntime.FillEnumerableInfo, source, target, Expression.Constant(targetType), provider);
+            var filled = Expression.Variable(typeof(object), "filled");
+            return Expression.Block(
+                typeof(object),
+                new[] { filled },
+                Expression.Assign(filled, Expression.Call(CloneRuntime.FillEnumerableInfo, source, target, Expression.Constant(targetType), provider)),
+                Expression.Call(CloneRuntime.CopyCollectionPropertiesInfo, source, filled, provider)
+            );
         }
 
         private static Expression BuildMemberCopy(Type sourceType, Type targetType, Expression source, Expression target, Expression provider, CloneSettings settings) {
@@ -294,6 +314,13 @@ namespace CloneBox {
             var sourceField = sourceType.GetField(targetField.Name, settings.FieldBindings);
             if (sourceField == null)
                 return null;
+            if (sourceField.FieldType.IsPointer || targetField.Type.IsPointer) {
+                return WrapFieldPredicate(
+                    Expression.Call(CloneRuntime.CopyPointerFieldInfo, Expression.Constant(targetField.FieldInfo), sourceBoxed, targetBoxed),
+                    targetField.FieldInfo,
+                    provider,
+                    hasFieldPredicate);
+            }
             var cloned = BuildClonedValue(Expression.Field(sourceTyped, sourceField), sourceField.FieldType, targetField.Type, provider);
             Expression assign;
             if (targetField.FieldInfo.IsInitOnly || !targetField.FieldInfo.IsPublic) {
@@ -313,6 +340,8 @@ namespace CloneBox {
         }
 
         private static Expression BuildClonedValue(Expression getValue, Type sourceValueType, Type targetValueType, Expression provider) {
+            if (sourceValueType.IsPointer || targetValueType.IsPointer)
+                return getValue;
             if (sourceValueType.IsRealPrimitive() && targetValueType.IsRealPrimitive()) {
                 if (sourceValueType == targetValueType)
                     return getValue;
