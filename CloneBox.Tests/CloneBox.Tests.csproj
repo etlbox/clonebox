@@ -5,7 +5,7 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <RootNamespace>CloneBox.Tests</RootNamespace>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>14.0</LangVersion>
         
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
