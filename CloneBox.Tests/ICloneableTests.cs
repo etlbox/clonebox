@@ -17,6 +17,16 @@ namespace CloneBox.Tests {
         }
 
         [Fact]
+        public void ArrayIsNotClonedViaICloneable() {
+            var orig = new[] { 1, 2, 3 };
+            var clone = orig.CloneX(new CloneSettings { UseICloneableClone = true });
+            clone.Should().NotBeSameAs(orig);
+            clone.Should().Equal(1, 2, 3);
+            orig[0] = 9;
+            clone[0].Should().Be(1);
+        }
+
+        [Fact]
         public void ImplementingICloneable() {
             var orig = new CloneableClass();
 

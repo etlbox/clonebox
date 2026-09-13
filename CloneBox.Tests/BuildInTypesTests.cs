@@ -179,33 +179,7 @@ namespace CloneBox.Tests {
             var orig = new StringBuilder();
             orig.Append("test1");
             var clone = orig.CloneX();
-            clone.ToString().Should().Be("test1");
-
-            /* Unmerged change from project 'CloneBox.Tests (net8.0)'
-            Before:
-                    }
-
-
-                    [Fact]
-            After:
-                    }
-
-
-                    [Fact]
-            */
-
-            /* Unmerged change from project 'CloneBox.Tests (net47)'
-            Before:
-                    }
-
-
-                    [Fact]
-            After:
-                    }
-
-
-                    [Fact]
-            */
+            clone.ToString().Should().Be("test1");      
         }
 
 
