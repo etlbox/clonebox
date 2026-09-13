@@ -24,14 +24,18 @@ namespace CloneBox.Benchmark {
             timer.Stop();
             Console.WriteLine($"Creation of test objects took {timer.Elapsed}");
 
+            var cloneBoxSettings = new CloneSettings() {
+                IncludeNonPublicFields = false,
+                IncludeNonPublicProperties = false,
+                IncludeNonPublicConstructors = false
+            };
+            origList[0].CloneX(cloneBoxSettings);
+            origList[0].DeepClone();
+
             Console.WriteLine($"Measuring CloneBox.Clone() X {TestObjects:N0}...");
             timer.Restart();
             for (var i = 0; i < TestObjects; i++) {
-                clonedListCloneBox[i] = origList[i].CloneX(new CloneSettings() {
-                    IncludeNonPublicFields = false,
-                    IncludeNonPublicProperties = false,
-                    IncludeNonPublicConstructors = false
-                });
+                clonedListCloneBox[i] = origList[i].CloneX(cloneBoxSettings);
             }
             timer.Stop();
             results.Add("CloneBox", timer.Elapsed);
