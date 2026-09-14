@@ -1,65 +1,44 @@
-﻿using Force.DeepCloner;
-using System.Diagnostics;
+﻿using System.Globalization;
+using System.Text;
 
 namespace CloneBox.Benchmark {
-    internal class Program {
 
-        private const int TestObjects = 2000;
+    internal static class Config {
+        public static readonly TimeSpan Budget = TimeSpan.FromSeconds(8);
+        public static readonly TimeSpan WorkerTimeout = TimeSpan.FromSeconds(20);
+    }
+
+    internal static class Program {
 
         static void Main(string[] args) {
-            var results = new Dictionary<string, TimeSpan>();
-            Console.WriteLine("CloneBox Benchmark");
-            var timer = new Stopwatch();
+            Console.OutputEncoding = Encoding.UTF8;
 
-            Console.WriteLine($"Creation of test objects started.");
-
-            timer.Start();
-            var origList = new BenchmarkObject[TestObjects];
-            var clonedListCloneBox = new BenchmarkObject[TestObjects];
-            var clonedListDeepClone = new BenchmarkObject[TestObjects];
-
-            for (int i=0;i<TestObjects;i++) {
-                origList[i] = BenchmarkObject.CreateTestObject(i);
-            }
-            timer.Stop();
-            Console.WriteLine($"Creation of test objects took {timer.Elapsed}");
-
-            var cloneBoxSettings = new CloneSettings() {
-                IncludeNonPublicFields = false,
-                IncludeNonPublicProperties = false,
-                IncludeNonPublicConstructors = false
-            };
-            origList[0].CloneX(cloneBoxSettings);
-            origList[0].DeepClone();
-
-            Console.WriteLine($"Measuring CloneBox.Clone() X {TestObjects:N0}...");
-            timer.Restart();
-            for (var i = 0; i < TestObjects; i++) {
-                clonedListCloneBox[i] = origList[i].CloneX(cloneBoxSettings);
-            }
-            timer.Stop();
-            results.Add("CloneBox", timer.Elapsed);
-            Console.WriteLine($"CloneBox took {timer.Elapsed}");
-            
-
-            Console.WriteLine($"Measuring DeepCloner.DeepClone() X {TestObjects:N0}...");
-            timer.Restart();
-            for (var i = 0; i < TestObjects; i++) {
-                clonedListDeepClone[i] = origList[i].DeepClone();
-            }
-            timer.Stop();
-            results.Add("DeepCloner", timer.Elapsed);
-            Console.WriteLine($"DeepCloner took {timer.Elapsed}");
-
-            Console.WriteLine($"\r\nFinished performance tests!\r\n");
-            Console.WriteLine($"Results: \r\n");
-
-            var resultNumber = 1;
-            foreach (var result in results.OrderBy(x => x.Value)) {
-                Console.WriteLine($"#{resultNumber}: {result.Key} took {result.Value}, {(result.Value.TotalMilliseconds / TestObjects):N2}ms per clone operation");
-                resultNumber++;
+            if (args.Length == 3 && args[0] == Measure.WorkerArg) {
+                Measure.WorkerMain(
+                    int.Parse(args[1], CultureInfo.InvariantCulture),
+                    int.Parse(args[2], CultureInfo.InvariantCulture));
+                return;
             }
 
+            var libs = Contenders.All();
+            var scenarios = Scenarios.All();
+
+            Report.Banner();
+            Report.Intro(libs);
+
+            var results = new List<Result>();
+            for (var s = 0; s < scenarios.Length; s++) {
+                Report.ScenarioHead(scenarios[s]);
+                for (var i = 0; i < libs.Length; i++) {
+                    Report.Measuring(libs[i]);
+                    var result = Measure.Run(libs[i], scenarios[s], i, s);
+                    Report.Measured(result);
+                    results.Add(result);
+                }
+                Console.WriteLine();
+            }
+
+            Report.Write(scenarios, results);
         }
     }
 }

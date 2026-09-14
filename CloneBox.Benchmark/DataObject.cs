@@ -1,25 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace CloneBox.Benchmark {
 
-namespace CloneBox.Benchmark {
     public class DataObject {
         public int Id { get; set; }
         public byte[]? Data { get; set; }
         public string? Name { get; set; }
+        public ComplexGraph? Parent { get; set; }
 
-        public BenchmarkObject? Parent { get; set; } 
-
-
-        public static DataObject CreateDataObject(BenchmarkObject parent, int id) {
-            return new DataObject() {
-                Id = id,
-                Data = Encoding.GetEncoding("ISO-8859-1").GetBytes(BenchmarkObject.RandomString(1000)),
-                Name = BenchmarkObject.RandomString(1000),
-                Parent = parent
-            };
-        }
+        public static DataObject Create(ComplexGraph parent, int id) => new() {
+            Id = id,
+            Data = ComplexGraph.RandomBytes(1000),
+            Name = ComplexGraph.RandomString(1000),
+            Parent = parent
+        };
     }
 }
