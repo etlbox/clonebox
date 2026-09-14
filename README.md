@@ -12,6 +12,16 @@ Most “cloners” handle a flat POCO and then fall apart: cycles overflow the s
 
 CloneBox is built for exactly those cases, backed by **280+ tests** on .NET 10 and .NET Framework 4.8 / 4.7 — and it is the only library in the [benchmark](#benchmarks) that gets every graph right, including cloning **into an object you already have**.
 
+---
+
+> ### Free and open source — from the makers of ETLBox
+>
+> CloneBox is built and maintained by **[ETLBoxperts GmbH](https://www.etlbox.net)**, the company behind **ETLBox**, the code-first ETL and data integration library for .NET.
+> We needed a cloner our own data flows could rely on, found none — so we built one and released it under the **MIT license** for the community.
+> [**Discover ETLBox →**](https://www.etlbox.net)
+
+---
+
 ## Install
 
 ```bash
@@ -220,6 +230,16 @@ The table measures two different jobs. **simple / cyclic / dynamic** are same-ty
 
 In short: DeepCloner is a solid same-type cloner and wins on simple graphs, the mappers and the serializer were never meant to be cloners, and CloneBox is the only one that is correct on cycles, on dynamic objects, **and** on clone-into.
 
+## Who builds CloneBox
+
+CloneBox is created and maintained by **[ETLBoxperts GmbH](https://www.etlbox.net)**, the company behind **ETLBox** — a complete ETL and data integration library for .NET.
+
+It started as our own problem. ETLBox moves records through data flows that work with strongly typed objects *and* `ExpandoObject`, and several components have to pass on a copy of a row rather than the row itself. We went looking for a cloning library, and none of them held up against real data: cycles ended in stack overflows, dynamic objects came back sharing their nested instances, dictionaries lost their key types. So we wrote our own and hardened it with the test suite in this repository.
+
+We are releasing it under the MIT license because a dependable deep clone is something almost every .NET project runs into sooner or later, and the community has given us plenty over the years. This is real open source, not a trial version: use it, fork it, and issues and pull requests are welcome.
+
+If you work with data in .NET, have a look at what we build for a living: **[www.etlbox.net](https://www.etlbox.net)**. ETLBox is a code-first ETL toolbox — extract, transform and load across databases, files, APIs and streaming, with a parallel data-flow engine that handles datasets larger than memory. No GUI required, though [DirectSync](https://www.directsync.net) exists if you want one.
+
 ## License
 
-MIT. Copyright ETLBoxperts.
+MIT — see [LICENSE](LICENSE). Copyright ETLBoxperts GmbH.
