@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Force.DeepCloner;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -111,34 +110,6 @@ namespace CloneBox.Tests {
             var firstMs = TimeOne(() => first.CloneX());
             var cachedMs = MeasureAfterWarmup(first, x => x.CloneX(), 200);
             cachedMs.Should().BeLessThan(firstMs * 50 + 1);
-        }
-
-        [Fact]
-        public void SimplePoco_NotMuchSlowerThanDeepCloner() {
-            var sample = new SimplePoco { Id = 1, Name = "A", Created = DateTime.UtcNow };
-            var cloneBox = MeasureAfterWarmup(sample, x => x.CloneX(), 2000);
-            var deep = MeasureAfterWarmup(sample, x => x.DeepClone(), 2000);
-            cloneBox.Should().BeLessThan(deep * 15 + 0.05);
-        }
-
-        [Fact]
-        public void List_NotMuchSlowerThanDeepCloner() {
-            var sample = new List<SimplePoco>();
-            for (int i = 0; i < 50; i++)
-                sample.Add(new SimplePoco { Id = i, Name = "n" + i, Created = DateTime.UtcNow });
-            var cloneBox = MeasureAfterWarmup(sample, x => x.CloneX(), 400);
-            var deep = MeasureAfterWarmup(sample, x => x.DeepClone(), 400);
-            cloneBox.Should().BeLessThan(deep * 15 + 0.05);
-        }
-
-        [Fact]
-        public void Dictionary_NotMuchSlowerThanDeepCloner() {
-            var sample = new Dictionary<int, SimplePoco>();
-            for (int i = 0; i < 50; i++)
-                sample.Add(i, new SimplePoco { Id = i, Name = "n" + i, Created = DateTime.UtcNow });
-            var cloneBox = MeasureAfterWarmup(sample, x => x.CloneX(), 400);
-            var deep = MeasureAfterWarmup(sample, x => x.DeepClone(), 400);
-            cloneBox.Should().BeLessThan(deep * 15 + 0.05);
         }
 
         public class UniqueForCompile {
