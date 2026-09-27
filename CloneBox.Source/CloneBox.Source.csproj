@@ -4,12 +4,42 @@
         <TargetFrameworks>netstandard2.0;net47;net48;net10.0</TargetFrameworks>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <AssemblyName>CloneBox</AssemblyName>
         <RootNamespace>CloneBox</RootNamespace>
         <LangVersion>14.0</LangVersion>
+
+        <Version>1.0.0</Version>
+        <PackageId>CloneBox</PackageId>
+        <Title>CloneBox</Title>
+        <Authors>ETLBoxperts GmbH</Authors>
+        <Company>ETLBoxperts GmbH</Company>
+        <Copyright>Copyright © ETLBoxperts GmbH</Copyright>
+        <Description>Deep-clone any .NET object graph with CloneX(), or copy into another type or an existing instance with CloneXTo(). Handles cycles, ExpandoObject, dictionaries, and mixed graphs. Free and open source (MIT) from the makers of ETLBox.</Description>
+        <PackageTags>clone deep-clone cloning object-graph expando dynamic dictionary dotnet csharp</PackageTags>
+        <PackageProjectUrl>https://www.clonebox.io</PackageProjectUrl>
+        <PackageReleaseNotes>Initial release. Deep-clone any .NET object graph with CloneX(), or copy into another type or an existing instance with CloneXTo().</PackageReleaseNotes>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>logo_clonebox_128x128.png</PackageIcon>
+        <RepositoryUrl>https://github.com/etlbox/clonebox</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+
+        <DebugType>portable</DebugType>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+        <None Include="logo_clonebox_128x128.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All" />
     </ItemGroup>
 
 </Project>
